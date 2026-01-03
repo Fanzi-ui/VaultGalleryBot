@@ -10,10 +10,11 @@ from telegram.ext import (
 import config
 
 # --- Controllers (business logic) ---
-from controllers.start_controller import start_command      # /start
-from controllers.help_controller import help_command        # /help
-from controllers.upload_controller import upload_command    # media uploads
-from controllers.random_controller import random_command    # /random
+from controllers.start_controller import start_command          # /start
+from controllers.help_controller import help_command            # /help
+from controllers.upload_controller import upload_command        # media uploads
+from controllers.random_controller import random_command        # /random
+from controllers.listmodels_controller import listmodels_command # /listmodels
 
 
 def main():
@@ -35,6 +36,9 @@ def main():
 
     # /random [model] → random gallery selection
     app.add_handler(CommandHandler("random", random_command))
+
+    # /listmodels → list all models with media counts
+    app.add_handler(CommandHandler("listmodels", listmodels_command))
 
     # --- Media upload handler ---
     # Handles photos or videos with caption: /upload <model name>
