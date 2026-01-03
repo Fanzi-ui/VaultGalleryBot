@@ -9,14 +9,15 @@ from telegram.ext import (
 
 import config
 
-# Controllers (business logic)
-from controllers.start_controller import start_command
-from controllers.help_controller import help_command
-from controllers.upload_controller import upload_command
+# --- Controllers (business logic) ---
+from controllers.start_controller import start_command      # /start
+from controllers.help_controller import help_command        # /help
+from controllers.upload_controller import upload_command    # media uploads
+from controllers.random_controller import random_command    # /random
 
 
 def main():
-    # --- Logging ---
+    # --- Logging configuration ---
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
@@ -31,6 +32,9 @@ def main():
 
     # /help → list available commands
     app.add_handler(CommandHandler("help", help_command))
+
+    # /random [model] → random gallery selection
+    app.add_handler(CommandHandler("random", random_command))
 
     # --- Media upload handler ---
     # Handles photos or videos with caption: /upload <model name>
