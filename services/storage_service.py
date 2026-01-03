@@ -14,6 +14,7 @@ def normalize_model_name(name: str) -> str:
 async def save_media(update, context, model_name: str) -> str:
     """
     Save media to disk AND record it in the database.
+    Supports bulk (album) uploads safely.
     """
 
     message = update.message
@@ -27,15 +28,19 @@ async def save_media(update, context, model_name: str) -> str:
         media_obj = message.photo[-1]
         media_type = "image"
         extension = ".jpg"
+        unique_id = media_obj.file_unique_id
+
     elif message.video:
         media_obj = message.video
         media_type = "video"
         extension = ".mp4"
+        unique_id = media_obj.file_unique_id
+
     else:
         raise ValueError("Unsupported media type")
 
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    filename = f"{timestamp}{extension}"
+    # UNIQUE filename (prevents overwrite in albums)
+    filename = f"{unique_id}{extension}"
     file_path = model_dir / filename
 
     tg_file = await context.bot.get_file(media_obj.file_id)
@@ -49,7 +54,7 @@ async def save_media(update, context, model_name: str) -> str:
         if not model:
             model = Model(name=model_name)
             session.add(model)
-            session.flush()  # get model.id
+            session.flush()
 
         # Create media record
         media = Media(

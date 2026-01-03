@@ -1,6 +1,25 @@
 import config
 from views.message_view import send_text, send_media
 from services.random_service import get_random_media
+from models.database import SessionLocal
+from models.model_entity import Model
+
+
+def _resolve_model_name(user_input: str | None) -> str | None:
+    if not user_input:
+        return None
+
+    tokens = user_input.strip().split()
+    last_name = tokens[-1].lower()
+
+    session = SessionLocal()
+    try:
+        for model in session.query(Model).all():
+            if model.name.lower() == last_name:
+                return model.name
+        return None
+    finally:
+        session.close()
 
 
 async def random_command(update, context):
@@ -16,31 +35,30 @@ async def random_command(update, context):
         )
         return
 
-    # Parse optional model name
-    args = context.args
-    model_name = " ".join(args).strip() if args else None
+    raw_input = " ".join(context.args) if context.args else None
+    model_name = _resolve_model_name(raw_input)
+
+    if raw_input and not model_name:
+        await send_text(
+            context.bot,
+            chat_id,
+            f"❌ Model not found: {raw_input}"
+        )
+        return
 
     media = get_random_media(model_name)
 
     if not media:
-        if model_name:
-            await send_text(
-                context.bot,
-                chat_id,
-                f"❌ No media found for model: {model_name}"
-            )
-        else:
-            await send_text(
-                context.bot,
-                chat_id,
-                "❌ No media found in the gallery."
-            )
+        await send_text(
+            context.bot,
+            chat_id,
+            "❌ No media found."
+        )
         return
 
-    # Send the actual media
     await send_media(
         context.bot,
         chat_id,
-        media.file_path,
-        media.media_type
+        media["file_path"],
+        media["media_type"]
     )
