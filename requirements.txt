@@ -1,0 +1,4 @@
+python-telegram-bot==20.*
+SQLAlchemy==2.*
+Pillow
+python-dotenv
