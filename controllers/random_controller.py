@@ -1,5 +1,5 @@
 import config
-from views.message_view import send_text
+from views.message_view import send_text, send_media
 from services.random_service import get_random_media
 
 
@@ -37,8 +37,10 @@ async def random_command(update, context):
             )
         return
 
-    await send_text(
+    # Send the actual media
+    await send_media(
         context.bot,
         chat_id,
-        f"🎲 Random selection ready:\n{media.file_path}"
+        media.file_path,
+        media.media_type
     )
