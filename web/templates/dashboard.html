@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<section>
+    <p><strong>Total Models:</strong> {{ model_count }}</p>
+    <p><strong>Total Media Files:</strong> {{ media_count }}</p>
+</section>
+
+<section>
+    <a href="/models" role="button">View Models</a>
+</section>
+{% endblock %}

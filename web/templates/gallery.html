@@ -1,0 +1,96 @@
+<h2 style="text-align:center;">
+  {{ model_name | title }} 😈
+</h2>
+
+<div id="gallery-grid" style="
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+">
+  {% for media in media %}
+    {% if media.type == "image" %}
+      <img
+        src="{{ media.url }}"
+        loading="lazy"
+        style="width:100%; border-radius:6px; cursor:pointer;"
+        onclick="openViewer({{ loop.index0 }})"
+      >
+    {% endif %}
+  {% endfor %}
+</div>
+
+<hr style="margin:30px 0;">
+
+<div style="text-align:center; margin-bottom:30px;">
+  {% if page > 1 %}
+    <a href="?page={{ page - 1 }}">⬅ Previous</a>
+  {% endif %}
+
+  <span style="margin: 0 15px;">
+    Page {{ page }} / {{ total_pages }}
+  </span>
+
+  {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}">Next ➡</a>
+  {% endif %}
+</div>
+
+<!-- 🔥 LIGHTBOX VIEWER -->
+<div id="viewer" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.9);
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+">
+  <img id="viewer-img" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:10px;
+  ">
+</div>
+
+<script>
+  const images = [
+    {% for media in media %}
+      {% if media.type == "image" %}
+        "{{ media.url }}",
+      {% endif %}
+    {% endfor %}
+  ];
+
+  let currentIndex = 0;
+
+  function openViewer(index) {
+    currentIndex = index;
+    document.getElementById("viewer-img").src = images[currentIndex];
+    document.getElementById("viewer").style.display = "flex";
+  }
+
+  function closeViewer() {
+    document.getElementById("viewer").style.display = "none";
+  }
+
+  function nextImage() {
+    currentIndex = (currentIndex + 1) % images.length;
+    document.getElementById("viewer-img").src = images[currentIndex];
+  }
+
+  function prevImage() {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    document.getElementById("viewer-img").src = images[currentIndex];
+  }
+
+  document.getElementById("viewer").onclick = closeViewer;
+
+  document.addEventListener("keydown", function (e) {
+    if (document.getElementById("viewer").style.display !== "flex") return;
+
+    if (e.key === "ArrowRight") nextImage();
+    if (e.key === "ArrowLeft") prevImage();
+    if (e.key === "Escape") closeViewer();
+  });
+</script>

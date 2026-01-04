@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Models</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Model Name</th>
+            <th>Media Count</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for model in models %}
+        <tr>
+            <td>{{ model.name }}</td>
+            <td>{{ model.media_count }}</td>
+            <td>
+                <a href="/models/{{ model.name }}">View Gallery</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
