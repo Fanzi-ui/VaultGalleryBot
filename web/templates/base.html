@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>VaultGalleryBot Admin</title>
 
     <!-- Pico.css CDN -->
@@ -13,20 +14,45 @@
 </head>
 <body>
 
-<nav class="container">
-    <ul>
-        <li><strong>VaultGalleryBot Admin</strong></li>
-    </ul>
-    <ul>
-        <li><a href="/{{ token_query | default('') }}">Dashboard</a></li>
-        <li><a href="/models{{ token_query | default('') }}">Models</a></li>
-    </ul>
-</nav>
+{% if not hide_nav %}
+    <nav class="container">
+        <ul>
+            <li style="display:flex; align-items:center; gap:0.6rem;">
+                <img
+                    src="/static/logo/logo.png"
+                    alt="VaultGalleryBot logo"
+                    style="width:28px; height:28px; object-fit:contain;"
+                >
+                <strong>VaultGalleryBot Admin</strong>
+            </li>
+        </ul>
+        <ul>
+            <li style="opacity:1; color:#ffffff; letter-spacing:0.18em; text-transform:uppercase; font-size:0.7rem;">
+                Fanzi.ui
+            </li>
+            <li><a href="/{{ token_query | default('') }}">Dashboard</a></li>
+            <li><a href="/models{{ token_query | default('') }}">Models</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+{% endif %}
 
 <main class="container">
     {% block content %}
     {% endblock %}
 </main>
+
+<footer
+  class="container"
+  style="margin-top:3rem; padding-bottom:2rem; text-align:center; color:#ffffff; opacity:0.9; letter-spacing:0.2em; text-transform:uppercase; font-size:0.65rem;"
+>
+  <div>Fanzi.ui • <span id="year">2025</span></div>
+</footer>
+
+<script>
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+</script>
 
 </body>
 </html>

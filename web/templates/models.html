@@ -116,6 +116,25 @@ body {
 .model-actions button:hover {
     text-decoration: underline;
 }
+
+.empty-state {
+    border: 1px dashed rgba(255,255,255,0.15);
+    padding: 2rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+.model-image img {
+    opacity: 0;
+    transition: opacity 280ms ease, filter 280ms ease;
+}
+
+.model-image img.is-loaded {
+    opacity: 1;
+}
 </style>
 
 <div class="models-header">
@@ -125,27 +144,35 @@ body {
     </div>
 </div>
 
-<div class="models-grid">
-    {% for model in models %}
-    <div class="model-card">
-        <div class="model-image">
-            {% if model.preview_file %}
-                <img src="/media/models/{{ model.slug }}/{{ model.preview_file }}" alt="{{ model.name }}">
-            {% endif %}
-        </div>
+{% if models %}
+    <div class="models-grid">
+        {% for model in models %}
+        <div class="model-card">
+            <div class="model-image">
+                {% if model.preview_file %}
+                    <img
+                        src="/media/models/{{ model.slug }}/{{ model.preview_file }}"
+                        alt="{{ model.name }}"
+                        loading="lazy"
+                    >
+                {% endif %}
+            </div>
 
-        <div class="model-info">
-            <div class="model-name">{{ model.name }}</div>
-            <div class="model-meta">{{ model.media_count }} FILES</div>
+            <div class="model-info">
+                <div class="model-name">{{ model.name }}</div>
+                <div class="model-meta">{{ model.media_count }} FILES</div>
 
-            <div class="model-actions">
-                <a href="/models/{{ model.slug }}{{ token_query }}">View Gallery →</a>
-                <button onclick="deleteModel('{{ model.slug }}')">Delete</button>
+                <div class="model-actions">
+                    <a href="/models/{{ model.slug }}{{ token_query }}">View Gallery →</a>
+                    <button onclick="deleteModel('{{ model.slug }}')">Delete</button>
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
+{% else %}
+    <div class="empty-state">No models yet</div>
+{% endif %}
 
 <script>
 const adminToken = "{{ token }}";
@@ -167,6 +194,14 @@ function deleteModel(slug) {
         }
     });
 }
+
+document.querySelectorAll(".model-image img").forEach((img) => {
+    if (img.complete) {
+        img.classList.add("is-loaded");
+    } else {
+        img.addEventListener("load", () => img.classList.add("is-loaded"));
+    }
+});
 </script>
 
 {% endblock %}

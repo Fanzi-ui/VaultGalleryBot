@@ -43,4 +43,5 @@ app.mount(
 app.include_router(dashboard.router)
 app.include_router(models.router)
 app.include_router(media.router)
+app.include_router(media.delete_router)
 app.include_router(auth.router)

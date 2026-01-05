@@ -6,6 +6,7 @@ from pathlib import Path
 from models.database import SessionLocal
 from models.model_entity import Model
 from models.media_entity import Media
+from services.media_cleanup_service import _delete_media_file
 from web.auth import require_admin_token, get_request_token
 
 router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
@@ -86,8 +87,15 @@ def delete_model(slug: str):
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
 
-        # delete related media rows
-        session.query(Media).filter(Media.model_id == model.id).delete()
+        # delete related media rows and files
+        media_items = (
+            session.query(Media)
+            .filter(Media.model_id == model.id)
+            .all()
+        )
+        for media in media_items:
+            _delete_media_file(media.file_path)
+            session.delete(media)
 
         # delete model row
         session.delete(model)

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from web.auth import verify_admin_credentials
+from web.auth import SERVER_SESSION_TOKEN, verify_admin_credentials
 
 router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
@@ -45,4 +45,18 @@ def login_submit(
         httponly=True,
         samesite="lax",
     )
+    response.set_cookie(
+        "session_token",
+        SERVER_SESSION_TOKEN,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("admin_token")
+    response.delete_cookie("session_token")
     return response

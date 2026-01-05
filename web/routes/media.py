@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from models.database import SessionLocal
 from models.media_entity import Media
 from models.model_entity import Model
+from services.media_cleanup_service import _delete_media_file
 from web.auth import require_admin_token, get_request_token
 
 router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
+delete_router = APIRouter(prefix="/api/media", dependencies=[Depends(require_admin_token)])
 templates = Jinja2Templates(directory="web/templates")
 
 PAGE_SIZE = 12
@@ -93,3 +95,19 @@ def model_gallery(request: Request, model_name: str, page: int = 1):
             "page_token_query": page_token_query,
         },
     )
+
+
+@delete_router.delete("/{media_id}")
+def delete_media(media_id: int):
+    session: Session = SessionLocal()
+    try:
+        media = session.query(Media).filter(Media.id == media_id).first()
+        if not media:
+            raise HTTPException(status_code=404, detail="Media not found")
+
+        _delete_media_file(media.file_path)
+        session.delete(media)
+        session.commit()
+        return {"status": "deleted"}
+    finally:
+        session.close()

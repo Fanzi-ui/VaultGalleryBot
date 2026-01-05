@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 import random
 
 from models.database import SessionLocal
 from models.model_entity import Model
 from models.media_entity import Media
-from web.auth import require_admin_token, get_request_token
+from web.auth import get_request_token, is_admin_request
 
-router = APIRouter(dependencies=[Depends(require_admin_token)])
+router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
 
 
@@ -18,6 +19,9 @@ def media_path_to_url(file_path: str) -> str:
 
 @router.get("/")
 def dashboard(request: Request):
+    if not is_admin_request(request):
+        return RedirectResponse(url="/login", status_code=303)
+
     session = SessionLocal()
     token = get_request_token(request)
     token_query = f"?token={token}" if token else ""
@@ -57,12 +61,8 @@ def dashboard(request: Request):
                 if img not in slideshow_images:
                     slideshow_images.append(img)
 
-        # 3️⃣ Shuffle remaining only
-        first_pass = slideshow_images[:len(by_model)]
-        rest = slideshow_images[len(by_model):]
-        random.shuffle(rest)
-
-        slideshow_images = first_pass + rest
+        # 3️⃣ Shuffle everything for full randomness
+        random.shuffle(slideshow_images)
 
     finally:
         session.close()
