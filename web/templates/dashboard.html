@@ -1,14 +1,212 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Dashboard</h2>
 
-<section>
-    <p><strong>Total Models:</strong> {{ model_count }}</p>
-    <p><strong>Total Media Files:</strong> {{ media_count }}</p>
-</section>
+<style>
+  /* ---- BACKGROUND SLIDESHOW ---- */
+  #slideshow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: #000;
+  }
 
-<section>
-    <a href="/models" role="button">View Models</a>
-</section>
+  #slideshow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 2;
+  }
+
+  #strip {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 32px;
+    padding-left: 100vw;
+    z-index: 1;
+    will-change: transform;
+  }
+
+  /* ---- BIGGER MODEL CARDS ---- */
+  .card {
+    width: 320px;
+    height: 460px;
+    flex-shrink: 0;
+    background: #111;
+    overflow: hidden;
+
+    filter: blur(8px);
+    opacity: 0.45;
+    transform: scale(0.97);
+
+    transition: filter 260ms ease,
+                opacity 260ms ease,
+                transform 260ms ease;
+  }
+
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ---- TOP-RIGHT HUD NAV ---- */
+  .hud-nav {
+    position: fixed;
+    top: 4.2rem; /* below Pico navbar */
+    right: 2rem;
+    z-index: 4;
+
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    color: rgba(255,255,255,0.7);
+  }
+
+  .hud-nav a {
+    color: #00bcd4;
+    text-decoration: none;
+  }
+
+  .hud-nav span {
+    opacity: 0.6;
+  }
+
+  /* ---- CONTROLS ---- */
+  .controls {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 5;
+    display: flex;
+    gap: 16px;
+  }
+
+  .controls button {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+  }
+</style>
+
+<!-- BACKGROUND -->
+<div id="slideshow">
+  <div id="strip"></div>
+</div>
+
+<!-- HUD NAV BAR -->
+<div class="hud-nav">
+  <span>Models: {{ model_count }}</span>
+  <span>|</span>
+  <span>Media: {{ media_count }}</span>
+  <span>|</span>
+  <a href="/models">View Models →</a>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button id="shuffle-toggle">SHUFFLE</button>
+  <button id="motion-toggle">PAUSE MOTION</button>
+</div>
+
+<script>
+  const images = {{ slideshow_images | default([]) | tojson }};
+
+  const CARD_WIDTH = 320;
+  const GAP = 32;
+  const BASE_SPEED = 1.1;
+
+  const strip = document.getElementById("strip");
+  const toggleBtn = document.getElementById("motion-toggle");
+  const shuffleBtn = document.getElementById("shuffle-toggle");
+
+  let position = 0;
+  let speed = BASE_SPEED;
+  let paused = false;
+  let index = 0;
+
+  function pickImage() {
+    if (!images.length) return null;
+    const img = images[index];
+    index = (index + 1) % images.length;
+    return img;
+  }
+
+  function addCard() {
+    const src = pickImage();
+    if (!src) return;
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const img = document.createElement("img");
+    img.src = src;
+
+    card.appendChild(img);
+    strip.appendChild(card);
+  }
+
+  function updateFocus() {
+    const centerX = window.innerWidth / 2;
+
+    document.querySelectorAll(".card").forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const dist = Math.abs(centerX - (rect.left + rect.width / 2));
+      const ratio = Math.min(dist / centerX, 1);
+
+      card.style.filter = `blur(${8 * ratio}px)`;
+      card.style.opacity = 1 - ratio * 0.6;
+      card.style.transform = `scale(${0.97 + (1 - ratio) * 0.06})`;
+    });
+  }
+
+  function loop() {
+    if (!paused) {
+      position -= speed;
+      strip.style.transform = `translate(${position}px, -50%)`;
+
+      const first = strip.firstElementChild;
+      if (first && first.getBoundingClientRect().right < 0) {
+        strip.removeChild(first);
+        addCard();
+        position += CARD_WIDTH + GAP;
+      }
+    }
+
+    updateFocus();
+    requestAnimationFrame(loop);
+  }
+
+  document.addEventListener("mousemove", e => {
+    const delta = Math.abs(e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+    speed = BASE_SPEED + delta * 0.6;
+  });
+
+  toggleBtn.onclick = () => {
+    paused = !paused;
+    toggleBtn.textContent = paused ? "RESUME MOTION" : "PAUSE MOTION";
+  };
+
+  shuffleBtn.onclick = () => {
+    window.location.reload();
+  };
+
+  const needed = Math.ceil(window.innerWidth / (CARD_WIDTH + GAP)) + 3;
+  for (let i = 0; i < needed; i++) addCard();
+
+  requestAnimationFrame(loop);
+</script>
+
 {% endblock %}

@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.templating import Jinja2Templates
+
+from pathlib import Path
 
 from models.database import SessionLocal
 from models.model_entity import Model
@@ -7,6 +9,8 @@ from models.media_entity import Media
 
 router = APIRouter(prefix="/models")
 templates = Jinja2Templates(directory="web/templates")
+
+MEDIA_ROOT = Path("media/models")
 
 
 def normalize_model_name(name: str) -> str:
@@ -27,11 +31,26 @@ def list_models(request: Request):
                 .count()
             )
 
+            slug = normalize_model_name(model.name)
+
+            # find preview image (safe, filesystem only)
+            preview_file = None
+            model_dir = MEDIA_ROOT / slug
+            if model_dir.exists() and model_dir.is_dir():
+                images = sorted(
+                    f.name
+                    for f in model_dir.iterdir()
+                    if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+                )
+                if images:
+                    preview_file = images[0]
+
             models_data.append(
                 {
-                    "name": model.name,                     # display name
-                    "slug": normalize_model_name(model.name),  # URL-safe name
+                    "name": model.name,
+                    "slug": slug,
                     "media_count": count,
+                    "preview_file": preview_file,
                 }
             )
     finally:
@@ -44,3 +63,31 @@ def list_models(request: Request):
             "models": models_data,
         },
     )
+
+
+@router.delete("/{slug}")
+def delete_model(slug: str):
+    session = SessionLocal()
+    try:
+        # match model name from slug
+        model_name = slug.replace("_", " ")
+
+        model = (
+            session.query(Model)
+            .filter(Model.name.ilike(model_name))
+            .first()
+        )
+
+        if not model:
+            raise HTTPException(status_code=404, detail="Model not found")
+
+        # delete related media rows
+        session.query(Media).filter(Media.model_id == model.id).delete()
+
+        # delete model row
+        session.delete(model)
+        session.commit()
+
+        return {"status": "deleted"}
+    finally:
+        session.close()

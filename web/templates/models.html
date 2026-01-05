@@ -1,26 +1,168 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Models</h2>
 
-<table>
-    <thead>
-        <tr>
-            <th>Model Name</th>
-            <th>Media Count</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for model in models %}
-        <tr>
-            <td>{{ model.name }}</td>
-            <td>{{ model.media_count }}</td>
-            <td>
-                <a href="/models/{{ model.name }}">View Gallery</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<style>
+/* ===== MODELS PAGE — BALENCIAGA STYLE ===== */
+
+body {
+    background: black;
+}
+
+/* Header */
+.models-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.models-header h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin: 0;
+    opacity: 0.85;
+}
+
+.models-count {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    opacity: 0.5;
+}
+
+/* Grid */
+.models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 3rem;
+}
+
+/* Card */
+.model-card {
+    position: relative;
+    transition: transform 0.35s ease;
+}
+
+.model-card:hover {
+    transform: translateY(-8px);
+}
+
+/* Image */
+.model-image {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: #111;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.model-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.85);
+    transition: filter 0.3s ease;
+}
+
+.model-card:hover img {
+    filter: brightness(1);
+}
+
+/* Info */
+.model-info {
+    margin-top: 1rem;
+}
+
+.model-name {
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+
+.model-meta {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    opacity: 0.5;
+    margin-bottom: 0.8rem;
+}
+
+/* Actions */
+.model-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.model-actions a {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.model-actions button {
+    background: none;
+    border: none;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff4d4d;
+    cursor: pointer;
+    padding: 0;
+}
+
+.model-actions button:hover {
+    text-decoration: underline;
+}
+</style>
+
+<div class="models-header">
+    <h2>Models</h2>
+    <div class="models-count">
+        {{ models|length }} TOTAL
+    </div>
+</div>
+
+<div class="models-grid">
+    {% for model in models %}
+    <div class="model-card">
+        <div class="model-image">
+            {% if model.preview_file %}
+                <img src="/media/models/{{ model.slug }}/{{ model.preview_file }}" alt="{{ model.name }}">
+            {% endif %}
+        </div>
+
+        <div class="model-info">
+            <div class="model-name">{{ model.name }}</div>
+            <div class="model-meta">{{ model.media_count }} FILES</div>
+
+            <div class="model-actions">
+                <a href="/models/{{ model.slug }}">View Gallery →</a>
+                <button onclick="deleteModel('{{ model.slug }}')">Delete</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function deleteModel(slug) {
+    if (!confirm(`Delete model "${slug}" and all its media? This cannot be undone.`)) {
+        return;
+    }
+
+    fetch(`/models/${slug}`, {
+        method: "DELETE"
+    }).then(res => {
+        if (res.ok) {
+            location.reload();
+        } else {
+            alert("Failed to delete model.");
+        }
+    });
+}
+</script>
+
 {% endblock %}

@@ -1,96 +1,210 @@
-<h2 style="text-align:center;">
-  {{ model_name | title }} 😈
-</h2>
+{% extends "base.html" %}
 
-<div id="gallery-grid" style="
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-">
-  {% for media in media %}
-    {% if media.type == "image" %}
-      <img
-        src="{{ media.url }}"
-        loading="lazy"
-        style="width:100%; border-radius:6px; cursor:pointer;"
-        onclick="openViewer({{ loop.index0 }})"
-      >
+{% block content %}
+
+<style>
+/* ===== BALENCIAGA GALLERY STYLE (HIGH CONTRAST FIX) ===== */
+
+body {
+    background: #050505;
+}
+
+/* Header */
+.gallery-header {
+    margin-bottom: 3rem;
+}
+
+.gallery-header h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    opacity: 1;
+    color: #f2f2f2;
+}
+
+/* Grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 3rem;
+}
+
+/* Item */
+.gallery-item {
+    aspect-ratio: 3 / 4;
+    background: #0d0d0d;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9) contrast(1.05);
+    transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    filter: brightness(1.05) contrast(1.1);
+    transform: scale(1.01);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4rem;
+}
+
+.pagination a {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #e5e5e5;
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+.pagination a:hover {
+    opacity: 1;
+}
+
+/* ===== LIGHTBOX ===== */
+
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.96);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox img {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+/* Controls */
+.lightbox-controls {
+    position: fixed;
+    bottom: 3rem;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.lightbox-controls button {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.6);
+    color: #ffffff;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+}
+
+.lightbox-controls button:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #ffffff;
+}
+</style>
+
+
+<div class="gallery-header">
+    <h2>{{ model_name }}</h2>
+</div>
+
+<div class="gallery-grid">
+    {% for item in media %}
+        <div
+            class="gallery-item"
+            data-index="{{ loop.index0 }}"
+            data-id="{{ item.id }}"
+        >
+            <img src="{{ item.url }}" loading="lazy">
+        </div>
+    {% endfor %}
+</div>
+
+<nav class="pagination">
+    {% if has_prev %}
+        <a href="?page={{ page - 1 }}">← Prev</a>
     {% endif %}
-  {% endfor %}
-</div>
+    {% if has_next %}
+        <a href="?page={{ page + 1 }}">Next →</a>
+    {% endif %}
+</nav>
 
-<hr style="margin:30px 0;">
-
-<div style="text-align:center; margin-bottom:30px;">
-  {% if page > 1 %}
-    <a href="?page={{ page - 1 }}">⬅ Previous</a>
-  {% endif %}
-
-  <span style="margin: 0 15px;">
-    Page {{ page }} / {{ total_pages }}
-  </span>
-
-  {% if page < total_pages %}
-    <a href="?page={{ page + 1 }}">Next ➡</a>
-  {% endif %}
-</div>
-
-<!-- 🔥 LIGHTBOX VIEWER -->
-<div id="viewer" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.9);
-  z-index:9999;
-  justify-content:center;
-  align-items:center;
-">
-  <img id="viewer-img" style="
-    max-width:90%;
-    max-height:90%;
-    border-radius:10px;
-  ">
+<!-- LIGHTBOX -->
+<div id="lightbox" class="lightbox">
+    <img id="lightboxImage">
+    <div class="lightbox-controls">
+        <button onclick="deleteCurrent()">Delete</button>
+        <button onclick="closeLightbox()">Close</button>
+    </div>
 </div>
 
 <script>
-  const images = [
-    {% for media in media %}
-      {% if media.type == "image" %}
-        "{{ media.url }}",
-      {% endif %}
-    {% endfor %}
-  ];
+const media = {{ media | tojson }};
+let currentIndex = 0;
 
-  let currentIndex = 0;
+const lightbox = document.getElementById("lightbox");
+const lightboxImage = document.getElementById("lightboxImage");
 
-  function openViewer(index) {
-    currentIndex = index;
-    document.getElementById("viewer-img").src = images[currentIndex];
-    document.getElementById("viewer").style.display = "flex";
-  }
+document.querySelectorAll(".gallery-item").forEach(item => {
+    item.addEventListener("click", () => {
+        currentIndex = Number(item.dataset.index);
+        openLightbox();
+    });
+});
 
-  function closeViewer() {
-    document.getElementById("viewer").style.display = "none";
-  }
+function openLightbox() {
+    lightboxImage.src = media[currentIndex].url;
+    lightbox.classList.add("active");
+}
 
-  function nextImage() {
-    currentIndex = (currentIndex + 1) % images.length;
-    document.getElementById("viewer-img").src = images[currentIndex];
-  }
+function closeLightbox() {
+    lightbox.classList.remove("active");
+}
 
-  function prevImage() {
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    document.getElementById("viewer-img").src = images[currentIndex];
-  }
+function nextImage() {
+    currentIndex = (currentIndex + 1) % media.length;
+    openLightbox();
+}
 
-  document.getElementById("viewer").onclick = closeViewer;
+function prevImage() {
+    currentIndex = (currentIndex - 1 + media.length) % media.length;
+    openLightbox();
+}
 
-  document.addEventListener("keydown", function (e) {
-    if (document.getElementById("viewer").style.display !== "flex") return;
+function deleteCurrent() {
+    const id = media[currentIndex].id;
+    if (!confirm("Delete this image?")) return;
+
+    fetch(`/media/${id}`, { method: "DELETE" })
+        .then(res => {
+            if (res.ok) location.reload();
+            else alert("Delete failed");
+        });
+}
+
+document.addEventListener("keydown", e => {
+    if (!lightbox.classList.contains("active")) return;
 
     if (e.key === "ArrowRight") nextImage();
     if (e.key === "ArrowLeft") prevImage();
-    if (e.key === "Escape") closeViewer();
-  });
+    if (e.key === "Escape") closeLightbox();
+});
 </script>
+
+{% endblock %}
