@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 import random
 
 from models.database import SessionLocal
 from models.model_entity import Model
 from models.media_entity import Media
+from web.auth import require_admin_token, get_request_token
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin_token)])
 templates = Jinja2Templates(directory="web/templates")
 
 
@@ -18,6 +19,8 @@ def media_path_to_url(file_path: str) -> str:
 @router.get("/")
 def dashboard(request: Request):
     session = SessionLocal()
+    token = get_request_token(request)
+    token_query = f"?token={token}" if token else ""
 
     try:
         model_count = session.query(Model).count()
@@ -71,5 +74,7 @@ def dashboard(request: Request):
             "model_count": model_count,
             "media_count": media_count,
             "slideshow_images": slideshow_images,
+            "token": token,
+            "token_query": token_query,
         },
     )

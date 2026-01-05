@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 
 from pathlib import Path
@@ -6,8 +6,9 @@ from pathlib import Path
 from models.database import SessionLocal
 from models.model_entity import Model
 from models.media_entity import Media
+from web.auth import require_admin_token, get_request_token
 
-router = APIRouter(prefix="/models")
+router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
 templates = Jinja2Templates(directory="web/templates")
 
 MEDIA_ROOT = Path("media/models")
@@ -20,6 +21,8 @@ def normalize_model_name(name: str) -> str:
 @router.get("")
 def list_models(request: Request):
     session = SessionLocal()
+    token = get_request_token(request)
+    token_query = f"?token={token}" if token else ""
     try:
         models_data = []
 
@@ -61,6 +64,8 @@ def list_models(request: Request):
         {
             "request": request,
             "models": models_data,
+            "token": token,
+            "token_query": token_query,
         },
     )
 

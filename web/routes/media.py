@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from models.database import SessionLocal
 from models.media_entity import Media
 from models.model_entity import Model
+from web.auth import require_admin_token, get_request_token
 
-router = APIRouter(prefix="/models")
+router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
 templates = Jinja2Templates(directory="web/templates")
 
 PAGE_SIZE = 12
@@ -30,8 +31,12 @@ def media_path_to_url(file_path: str) -> str:
 @router.get("/{model_name}")
 def model_gallery(request: Request, model_name: str, page: int = 1):
     session: Session = SessionLocal()
+    token = get_request_token(request)
+    token_query = f"?token={token}" if token else ""
+    page_token_query = f"&token={token}" if token else ""
     try:
         # find model by name
+        model_name = model_name.replace("_", " ")
         model = (
             session.query(Model)
             .filter(Model.name.ilike(model_name))
@@ -83,5 +88,8 @@ def model_gallery(request: Request, model_name: str, page: int = 1):
             "page": page,
             "has_next": page * PAGE_SIZE < total,
             "has_prev": page > 1,
+            "token": token,
+            "token_query": token_query,
+            "page_token_query": page_token_query,
         },
     )

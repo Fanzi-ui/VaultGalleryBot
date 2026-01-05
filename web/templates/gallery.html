@@ -138,10 +138,10 @@ body {
 
 <nav class="pagination">
     {% if has_prev %}
-        <a href="?page={{ page - 1 }}">← Prev</a>
+        <a href="?page={{ page - 1 }}{{ page_token_query }}">← Prev</a>
     {% endif %}
     {% if has_next %}
-        <a href="?page={{ page + 1 }}">Next →</a>
+        <a href="?page={{ page + 1 }}{{ page_token_query }}">Next →</a>
     {% endif %}
 </nav>
 
@@ -156,6 +156,8 @@ body {
 
 <script>
 const media = {{ media | tojson }};
+const adminToken = "{{ token }}";
+const deleteTokenQuery = adminToken ? `?token=${encodeURIComponent(adminToken)}` : "";
 let currentIndex = 0;
 
 const lightbox = document.getElementById("lightbox");
@@ -191,7 +193,10 @@ function deleteCurrent() {
     const id = media[currentIndex].id;
     if (!confirm("Delete this image?")) return;
 
-    fetch(`/media/${id}`, { method: "DELETE" })
+    fetch(`/media/${id}${deleteTokenQuery}`, {
+        method: "DELETE",
+        headers: adminToken ? { "X-Admin-Token": adminToken } : {}
+    })
         .then(res => {
             if (res.ok) location.reload();
             else alert("Delete failed");

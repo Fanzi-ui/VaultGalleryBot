@@ -139,7 +139,7 @@ body {
             <div class="model-meta">{{ model.media_count }} FILES</div>
 
             <div class="model-actions">
-                <a href="/models/{{ model.slug }}">View Gallery →</a>
+                <a href="/models/{{ model.slug }}{{ token_query }}">View Gallery →</a>
                 <button onclick="deleteModel('{{ model.slug }}')">Delete</button>
             </div>
         </div>
@@ -148,13 +148,17 @@ body {
 </div>
 
 <script>
+const adminToken = "{{ token }}";
+const tokenQuery = adminToken ? `?token=${encodeURIComponent(adminToken)}` : "";
+
 function deleteModel(slug) {
     if (!confirm(`Delete model "${slug}" and all its media? This cannot be undone.`)) {
         return;
     }
 
-    fetch(`/models/${slug}`, {
-        method: "DELETE"
+    fetch(`/models/${slug}${tokenQuery}`, {
+        method: "DELETE",
+        headers: adminToken ? { "X-Admin-Token": adminToken } : {}
     }).then(res => {
         if (res.ok) {
             location.reload();

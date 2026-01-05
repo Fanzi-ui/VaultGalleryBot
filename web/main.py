@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from web.routes import dashboard, models, media
+from web.routes import auth, dashboard, models, media
 
 app = FastAPI(title="VaultGalleryBot Admin")
 
@@ -43,3 +43,4 @@ app.mount(
 app.include_router(dashboard.router)
 app.include_router(models.router)
 app.include_router(media.router)
+app.include_router(auth.router)
