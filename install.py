@@ -127,6 +127,7 @@ def ensure_env_gui() -> int:
     ).grid(row=0, column=0, columnspan=2, sticky="w", padx=8, pady=6)
 
     fields = {}
+    saved = {"ok": False}
 
     def add_field(row: int, label: str, key: str, default_value: str, secret: bool = False):
         tk.Label(root, text=label).grid(row=row, column=0, sticky="w", padx=8, pady=6)
@@ -173,9 +174,11 @@ def ensure_env_gui() -> int:
         )
         ENV_FILE.write_text(content)
         messagebox.showinfo("Saved", f"Wrote {ENV_FILE}.")
+        saved["ok"] = True
         root.destroy()
 
     def on_cancel() -> None:
+        saved["ok"] = False
         root.destroy()
 
     button_frame = tk.Frame(root)
@@ -188,8 +191,9 @@ def ensure_env_gui() -> int:
         side="left", padx=6
     )
 
+    root.protocol("WM_DELETE_WINDOW", on_cancel)
     root.mainloop()
-    return 0
+    return 0 if saved["ok"] else 1
 
 
 if __name__ == "__main__":
