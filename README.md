@@ -72,62 +72,41 @@ Defaults are `some_random_secret`, `admin`, and `pass123` if you do not set them
 
 ## ▶️ Running
 
-Bot:
-
-```
-python app.py
-```
-
-Web admin:
-
-```
-uvicorn web.main:app --reload
-```
-
-Or run both together:
+Quick start (recommended):
 
 ```
 ./run.sh
 ```
 
+This launches the GUI installer every time so you can enter your own
+`BOT_TOKEN` and `AUTHORIZED_USERS`, then starts the bot + web UI.
+
 ---
 
-## 🚀 Quick Start (New Users)
+## 🚀 First-Time Install (New Users)
 
-1) Create a Telegram bot (each host uses their own token)
-- Open Telegram → message `@BotFather` → `/newbot`
-- Save the bot token
-
-2) Get your Telegram user ID
-- Message `@userinfobot` or `@getmyid_bot` and copy your ID
-
-3) Create `.env` in the project root:
+1) Clone the repo:
 ```
-BOT_TOKEN=your_own_bot_token_here
-AUTHORIZED_USERS=your_user_id_here
-WEB_ADMIN_TOKEN=some_random_secret
-WEB_ADMIN_USER=admin
-WEB_ADMIN_PASS=pass123
+git clone https://github.com/Fanzi-ui/VaultGalleryBot.git
+cd VaultGalleryBot
 ```
 
-4) Install dependencies:
-```
-pip install -r requirements.txt
-```
-
-5) Start the services (pick one option):
-
-- Option A: run both bot + web together
+2) Run the setup/start script:
 ```
 chmod +x run.sh
 ./run.sh
 ```
 
-- Option B: run them separately
-```
-python app.py
-uvicorn web.main:app --reload
-```
+3) In the GUI installer, provide:
+- `BOT_TOKEN`: from Telegram `@BotFather` (`/newbot`)
+- `AUTHORIZED_USERS`: your numeric Telegram ID (get via `@userinfobot`)
+
+Defaults used automatically:
+- `WEB_ADMIN_TOKEN=some_random_secret`
+- `WEB_ADMIN_USER=admin`
+- `WEB_ADMIN_PASS=pass123`
+
+After saving, the bot and web UI start automatically.
 
 6) Use the app:
 - Telegram: `/upload <model name>` with a photo/video
