@@ -1,13 +1,14 @@
 from datetime import datetime
 import logging
 from pathlib import Path
+import sqlite3
 
 try:
     from PIL import Image
 except Exception:
     Image = None
 
-from models.database import SessionLocal
+from models.database import BASE_DIR, SessionLocal
 from models import model_entity  # ensure model metadata is loaded
 from models.media_entity import Media
 
@@ -52,6 +53,17 @@ def compute_rating_for_path(file_path: str) -> int | None:
 
 
 def backfill_missing_ratings() -> None:
+    db_path = BASE_DIR / "gallery.db"
+    if not db_path.exists():
+        return
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='media'"
+        )
+        if cursor.fetchone() is None:
+            return
+
     session = SessionLocal()
     try:
         media_items = (
