@@ -66,7 +66,7 @@ The web admin requires a token and a login:
 - `WEB_ADMIN_TOKEN` is used for cookie/session validation
 - `WEB_ADMIN_USER` and `WEB_ADMIN_PASS` control the login credentials
 
-Defaults are `admin` / `pass123` if you do not set them.
+Defaults are `some_random_secret`, `admin`, and `pass123` if you do not set them.
 
 ---
 
@@ -94,7 +94,7 @@ Or run both together:
 
 ## 🚀 Quick Start (New Users)
 
-1) Create a Telegram bot
+1) Create a Telegram bot (each host uses their own token)
 - Open Telegram → message `@BotFather` → `/newbot`
 - Save the bot token
 
@@ -103,7 +103,7 @@ Or run both together:
 
 3) Create `.env` in the project root:
 ```
-BOT_TOKEN=your_bot_token_here
+BOT_TOKEN=your_own_bot_token_here
 AUTHORIZED_USERS=your_user_id_here
 WEB_ADMIN_TOKEN=some_random_secret
 WEB_ADMIN_USER=admin

@@ -1,4 +1,4 @@
-python-telegram-bot[job-queue]==20.*
+python-telegram-bot[job-queue]>=21,<22
 SQLAlchemy==2.*
 Pillow
 python-dotenv

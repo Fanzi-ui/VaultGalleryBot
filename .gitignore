@@ -5,3 +5,6 @@ __pycache__/
 media/
 
 .env
+logs/
+.env.local
+.env.bak
