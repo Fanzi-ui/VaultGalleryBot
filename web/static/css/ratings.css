@@ -1,0 +1,121 @@
+body {
+  background: #060606;
+}
+
+.ratings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.ratings-header h2 {
+  font-size: 1.1rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.ratings-header p {
+  margin: 0.5rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.ratings-count {
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.ratings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.rating-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background: #0c0c0c;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.rating-media {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #0a0a0a;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.rating-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rating-info {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.rating-model {
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.rating-meta {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.rating-card textarea {
+  background: #101010;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.rating-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.pill {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.rating-status {
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.empty-state {
+  border: 1px dashed rgba(255,255,255,0.15);
+  padding: 2rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  opacity: 0.75;
+}

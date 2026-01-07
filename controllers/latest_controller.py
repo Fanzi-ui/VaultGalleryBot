@@ -1,14 +1,13 @@
 import config
-from views.message_view import send_text
-from services.media_cleanup_service import delete_random_media_for_model
+from views.message_view import send_text, send_media
+from services.latest_service import get_latest_media
 from services.model_service import resolve_model_name, find_model_matches
 
 
-async def deletemedia_command(update, context):
+async def latest_command(update, context):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
 
-    # Permission check
     if user_id not in config.AUTHORIZED_USERS:
         await send_text(
             context.bot,
@@ -17,27 +16,27 @@ async def deletemedia_command(update, context):
         )
         return
 
-    if not context.args:
+    raw_args = context.args or []
+    count = 1
+    model_input = None
+
+    if raw_args:
+        if raw_args[-1].isdigit():
+            count = max(1, int(raw_args[-1]))
+            model_input = " ".join(raw_args[:-1]).strip() or None
+        else:
+            model_input = " ".join(raw_args).strip()
+
+    if count > 5:
         await send_text(
             context.bot,
             chat_id,
-            "Usage: /deletemedia <model> [count]"
+            "⚠️ Max count is 5."
         )
-        return
-
-    # Parse args
-    *name_parts, maybe_count = context.args
-    count = 1
-
-    if maybe_count.isdigit():
-        count = max(1, int(maybe_count))
-        model_input = " ".join(name_parts)
-    else:
-        model_input = " ".join(context.args)
+        count = 5
 
     model_name = resolve_model_name(model_input)
-
-    if not model_name:
+    if model_input and not model_name:
         matches = find_model_matches(model_input)
         if len(matches) > 1:
             await send_text(
@@ -54,18 +53,19 @@ async def deletemedia_command(update, context):
         )
         return
 
-    deleted = delete_random_media_for_model(model_name, count)
-
-    if deleted == 0:
+    media_items = get_latest_media(model_name, count)
+    if not media_items:
         await send_text(
             context.bot,
             chat_id,
-            f"ℹ️ No media found to delete for {model_name}."
+            "❌ No media found."
         )
         return
 
-    await send_text(
-        context.bot,
-        chat_id,
-        f"🗑️ Deleted {deleted} media item(s) from {model_name}."
-    )
+    for media in media_items:
+        await send_media(
+            context.bot,
+            chat_id,
+            media["file_path"],
+            media["media_type"]
+        )

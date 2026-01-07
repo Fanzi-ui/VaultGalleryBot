@@ -6,7 +6,9 @@ from models.database import SessionLocal
 from models.media_entity import Media
 from models.model_entity import Model
 from services.media_cleanup_service import _delete_media_file
+from services.rating_service import compute_rating_for_path
 from web.auth import require_admin_token, get_request_token
+from datetime import datetime
 
 router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
 delete_router = APIRouter(prefix="/api/media", dependencies=[Depends(require_admin_token)])
@@ -39,9 +41,10 @@ def model_gallery(request: Request, model_name: str, page: int = 1):
     try:
         # find model by name
         model_name = model_name.replace("_", " ")
+        normalized_name = " ".join(model_name.lower().replace("_", " ").split())
         model = (
             session.query(Model)
-            .filter(Model.name.ilike(model_name))
+            .filter(Model.normalized_name == normalized_name)
             .first()
         )
 
@@ -69,6 +72,9 @@ def model_gallery(request: Request, model_name: str, page: int = 1):
                 {
                     "id": m.id,
                     "url": url,
+                    "rating": m.rating,
+                    "rating_caption": m.rating_caption,
+                    "media_type": m.media_type,
                 }
             )
 
@@ -109,5 +115,40 @@ def delete_media(media_id: int):
         session.delete(media)
         session.commit()
         return {"status": "deleted"}
+    finally:
+        session.close()
+
+
+@delete_router.post("/{media_id}/rating")
+async def rate_media(media_id: int, request: Request):
+    session: Session = SessionLocal()
+    try:
+        payload = await request.json()
+    except Exception:
+        session.close()
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
+    rating = payload.get("rating")
+    caption = payload.get("caption") or ""
+
+    try:
+        media = session.query(Media).filter(Media.id == media_id).first()
+        if not media:
+            raise HTTPException(status_code=404, detail="Media not found")
+
+        if media.rating_caption:
+            raise HTTPException(status_code=409, detail="Caption already set")
+
+        if media.rating is None:
+            if rating is None:
+                rating = compute_rating_for_path(media.file_path)
+            if not isinstance(rating, int) or rating < 1 or rating > 100:
+                raise HTTPException(status_code=400, detail="Rating must be 1-100")
+            media.rating = rating
+
+        media.rating_caption = caption.strip()[:280]
+        media.rated_at = datetime.utcnow()
+        session.commit()
+        return {"status": "rated"}
     finally:
         session.close()

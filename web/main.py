@@ -3,9 +3,15 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from web.routes import auth, dashboard, models, media
+from models.database import ensure_media_rating_columns, ensure_model_normalized_columns
+from services.rating_service import backfill_missing_ratings
+from web.routes import auth, dashboard, models, media, insights
 
 app = FastAPI(title="VaultGalleryBot Admin")
+
+ensure_media_rating_columns()
+ensure_model_normalized_columns()
+backfill_missing_ratings()
 
 # -------------------------
 # Resolve project root
@@ -41,6 +47,7 @@ app.mount(
 # Routes
 # -------------------------
 app.include_router(dashboard.router)
+app.include_router(insights.router)
 app.include_router(models.router)
 app.include_router(media.router)
 app.include_router(media.delete_router)

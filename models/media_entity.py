@@ -14,3 +14,7 @@ class Media(Base):
 
     # NEW: track when media was last sent
     last_sent_at = Column(DateTime, nullable=True)
+
+    rating = Column(Integer, nullable=True)
+    rating_caption = Column(String, nullable=True)
+    rated_at = Column(DateTime, nullable=True)

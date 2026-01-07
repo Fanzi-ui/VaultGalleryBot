@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/ratings.css">
+{% endblock %}
+
+{% block content %}
+<div class="ratings-header">
+  <div>
+    <h2>Ratings Review</h2>
+    <p>Caption unrated images. Auto rating is applied where possible.</p>
+  </div>
+  <div class="ratings-count">
+    <span id="ratings-count">{{ items|length }}</span> to review
+  </div>
+</div>
+
+{% if items %}
+  <div class="ratings-grid">
+    {% for item in items %}
+      <div class="rating-card" data-id="{{ item.id }}">
+        <div class="rating-media">
+          <img src="{{ item.url }}" alt="{{ item.model_name }}">
+        </div>
+        <div class="rating-info">
+          <div class="rating-model">{{ item.model_name }}</div>
+          <div class="rating-meta">
+            {% if item.rating %}
+              Rating {{ item.rating }}
+            {% else %}
+              Rating pending
+            {% endif %}
+          </div>
+          <textarea rows="3" maxlength="280" placeholder="Add a caption"></textarea>
+          <div class="rating-actions">
+            <button class="pill save-rating">Save</button>
+            <button class="pill skip-rating">Skip</button>
+          </div>
+          <div class="rating-status"></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">No unrated images right now.</div>
+{% endif %}
+
+<script id="ratings-data" type="application/json">
+{{ {
+  "adminToken": token
+} | tojson }}
+</script>
+<script src="/static/js/ratings.js"></script>
+{% endblock %}

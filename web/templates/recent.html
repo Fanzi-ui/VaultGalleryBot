@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/gallery.css">
+{% endblock %}
+
+{% block content %}
+<div class="gallery-header">
+  <h2>Recently Added</h2>
+</div>
+
+{% if media %}
+  <div class="gallery-toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Filter</span>
+      <div class="toolbar-pills" role="group" aria-label="Rating filter">
+        <button type="button" class="pill active" data-rating-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="pill" data-rating-filter="unrated" aria-pressed="false">Unrated</button>
+        <button type="button" class="pill" data-rating-filter="rated" aria-pressed="false">Rated</button>
+      </div>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Type</span>
+      <div class="toolbar-pills" role="group" aria-label="Media type filter">
+        <button type="button" class="pill active" data-type-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="pill" data-type-filter="image" aria-pressed="false">Images</button>
+        <button type="button" class="pill" data-type-filter="video" aria-pressed="false">Videos</button>
+      </div>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Sort</span>
+      <div class="toolbar-pills" role="group" aria-label="Sort order">
+        <button type="button" class="pill active" data-sort="recent" aria-pressed="true">Recent</button>
+        <button type="button" class="pill" data-sort="rating" aria-pressed="false">Rating</button>
+      </div>
+    </div>
+    <div class="toolbar-meta">
+      <span id="gallery-visible-count">{{ media|length }}</span> / {{ media|length }} shown
+    </div>
+  </div>
+
+  <div class="gallery-grid">
+    {% for item in media %}
+    <div
+      class="gallery-item"
+      data-index="{{ loop.index0 }}"
+      data-id="{{ item.id }}"
+      data-rating="{{ item.rating or '' }}"
+      data-media-type="{{ item.media_type }}"
+    >
+      {% if item.media_type == "video" %}
+        <video src="{{ item.url }}" preload="metadata" muted playsinline></video>
+        <div class="play-icon">▶</div>
+        <div class="video-badge">Video</div>
+      {% else %}
+        <img src="{{ item.url }}" loading="lazy">
+      {% endif %}
+      <div class="rating-badge">
+        {% if item.rating %}
+          Rating {{ item.rating }}
+        {% else %}
+          Unrated
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">No media yet</div>
+{% endif %}
+
+<nav class="pagination">
+  {% if has_prev %}
+    <a href="?page={{ page - 1 }}{{ page_token_query }}">← Prev</a>
+  {% else %}
+    <span class="page-disabled">← Prev</span>
+  {% endif %}
+  {% if has_next %}
+    <a href="?page={{ page + 1 }}{{ page_token_query }}">Next →</a>
+  {% else %}
+    <span class="page-disabled">Next →</span>
+  {% endif %}
+</nav>
+
+<div id="lightbox" class="lightbox">
+  <img id="lightboxImage">
+  <video id="lightboxVideo" controls playsinline></video>
+  <div class="lightbox-hints">←/→ Next • Esc Close • Delete</div>
+  <div class="lightbox-controls">
+    <button onclick="deleteCurrent()" aria-label="Delete current media">Delete</button>
+    <button onclick="closeLightbox()" aria-label="Close lightbox">Close</button>
+  </div>
+</div>
+
+<script id="gallery-data" type="application/json">
+{{ {
+  "media": media,
+  "adminToken": token,
+  "hasNextPage": has_next,
+  "hasPrevPage": has_prev,
+  "nextPageUrl": "?page=" ~ (page + 1) ~ page_token_query,
+  "prevPageUrl": "?page=" ~ (page - 1) ~ page_token_query
+} | tojson }}
+</script>
+<script src="/static/js/gallery.js"></script>
+{% endblock %}

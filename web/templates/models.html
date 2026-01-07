@@ -1,170 +1,75 @@
 {% extends "base.html" %}
 
+{% block head %}
+    <link rel="stylesheet" href="/static/css/models.css">
+{% endblock %}
+
 {% block content %}
-
-<style>
-/* ===== MODELS PAGE — BALENCIAGA STYLE ===== */
-
-body {
-    background: black;
-}
-
-/* Header */
-.models-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 3rem;
-}
-
-.models-header h2 {
-    font-size: 1.1rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin: 0;
-    opacity: 0.85;
-}
-
-.models-count {
-    font-size: 0.7rem;
-    letter-spacing: 0.25em;
-    opacity: 0.5;
-}
-
-/* Grid */
-.models-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 3rem;
-}
-
-/* Card */
-.model-card {
-    position: relative;
-    transition: transform 0.35s ease;
-}
-
-.model-card:hover {
-    transform: translateY(-8px);
-}
-
-/* Image */
-.model-image {
-    width: 100%;
-    aspect-ratio: 3 / 4;
-    background: #111;
-    overflow: hidden;
-    border-radius: 4px;
-}
-
-.model-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.85);
-    transition: filter 0.3s ease;
-}
-
-.model-card:hover img {
-    filter: brightness(1);
-}
-
-/* Info */
-.model-info {
-    margin-top: 1rem;
-}
-
-.model-name {
-    font-size: 0.85rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
-}
-
-.model-meta {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    opacity: 0.5;
-    margin-bottom: 0.8rem;
-}
-
-/* Actions */
-.model-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.model-actions a {
-    font-size: 0.65rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    text-decoration: none;
-}
-
-.model-actions button {
-    background: none;
-    border: none;
-    font-size: 0.65rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: #ff4d4d;
-    cursor: pointer;
-    padding: 0;
-}
-
-.model-actions button:hover {
-    text-decoration: underline;
-}
-
-.empty-state {
-    border: 1px dashed rgba(255,255,255,0.15);
-    padding: 2rem;
-    text-align: center;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    opacity: 0.6;
-}
-
-.model-image img {
-    opacity: 0;
-    transition: opacity 280ms ease, filter 280ms ease;
-}
-
-.model-image img.is-loaded {
-    opacity: 1;
-}
-</style>
 
 <div class="models-header">
     <h2>Models</h2>
     <div class="models-count">
-        {{ models|length }} TOTAL
+        {{ models|length }} TOTAL • <span id="models-visible-count">{{ models|length }}</span> SHOWN
     </div>
 </div>
 
 {% if models %}
+    <div class="models-toolbar">
+        <div class="toolbar-group">
+            <label class="toolbar-label" for="model-search">Search</label>
+            <input id="model-search" type="search" placeholder="Search models">
+        </div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Filter</span>
+            <div class="toolbar-pills" role="group" aria-label="Model filters">
+                <button type="button" class="pill active" data-filter="all" aria-pressed="true">All</button>
+                <button type="button" class="pill" data-filter="photos" aria-pressed="false">Photos</button>
+                <button type="button" class="pill" data-filter="videos" aria-pressed="false">Videos</button>
+            </div>
+        </div>
+    </div>
+
     <div class="models-grid">
         {% for model in models %}
-        <div class="model-card">
+        <div
+            class="model-card"
+            data-name="{{ model.name }}"
+            data-image-count="{{ model.image_count }}"
+            data-video-count="{{ model.video_count }}"
+        >
             <div class="model-image">
                 {% if model.preview_file %}
-                    <img
-                        src="/media/models/{{ model.slug }}/{{ model.preview_file }}"
-                        alt="{{ model.name }}"
-                        loading="lazy"
-                    >
+                    {% if model.preview_type == "video" %}
+                        <video
+                            src="/media/models/{{ model.slug }}/{{ model.preview_file }}"
+                            preload="metadata"
+                            muted
+                            playsinline
+                        ></video>
+                    {% else %}
+                        <img
+                            src="/media/models/{{ model.slug }}/{{ model.preview_file }}"
+                            alt="{{ model.name }}"
+                            loading="lazy"
+                        >
+                    {% endif %}
+                {% else %}
+                    <div class="empty-preview">No Preview</div>
                 {% endif %}
             </div>
 
             <div class="model-info">
                 <div class="model-name">{{ model.name }}</div>
-                <div class="model-meta">{{ model.media_count }} FILES</div>
+                <div class="model-meta">
+                    {{ model.image_count }} Photos • {{ model.video_count }} Videos
+                </div>
+                {% if model.last_upload %}
+                    <div class="model-meta">Updated {{ model.last_upload.strftime("%Y-%m-%d") }}</div>
+                {% endif %}
 
                 <div class="model-actions">
                     <a href="/models/{{ model.slug }}{{ token_query }}">View Gallery →</a>
-                    <button onclick="deleteModel('{{ model.slug }}')">Delete</button>
+                    <button onclick="deleteModel('{{ model.slug }}')" aria-label="Delete {{ model.name }}">Delete</button>
                 </div>
             </div>
         </div>
@@ -174,34 +79,11 @@ body {
     <div class="empty-state">No models yet</div>
 {% endif %}
 
-<script>
-const adminToken = "{{ token }}";
-const tokenQuery = adminToken ? `?token=${encodeURIComponent(adminToken)}` : "";
-
-function deleteModel(slug) {
-    if (!confirm(`Delete model "${slug}" and all its media? This cannot be undone.`)) {
-        return;
-    }
-
-    fetch(`/models/${slug}${tokenQuery}`, {
-        method: "DELETE",
-        headers: adminToken ? { "X-Admin-Token": adminToken } : {}
-    }).then(res => {
-        if (res.ok) {
-            location.reload();
-        } else {
-            alert("Failed to delete model.");
-        }
-    });
-}
-
-document.querySelectorAll(".model-image img").forEach((img) => {
-    if (img.complete) {
-        img.classList.add("is-loaded");
-    } else {
-        img.addEventListener("load", () => img.classList.add("is-loaded"));
-    }
-});
+<script id="models-data" type="application/json">
+{{ {
+    "adminToken": token
+} | tojson }}
 </script>
+<script src="/static/js/models.js"></script>
 
 {% endblock %}

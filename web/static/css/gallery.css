@@ -1,0 +1,256 @@
+/* ===== BALENCIAGA GALLERY STYLE (HIGH CONTRAST FIX) ===== */
+
+body {
+  background: #050505;
+}
+
+/* Header */
+.gallery-header {
+  margin-bottom: 3rem;
+}
+
+.gallery-header h2 {
+  font-size: 1.1rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  opacity: 1;
+  color: #f2f2f2;
+}
+
+/* Toolbar */
+.gallery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem 2.5rem;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.toolbar-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.toolbar-pills {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+}
+
+.pill.active {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.toolbar-meta {
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-left: auto;
+}
+
+/* Grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 3rem;
+}
+
+/* Item */
+.gallery-item {
+  aspect-ratio: 3 / 4;
+  background: #0d0d0d;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.9) contrast(1.05);
+  transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.gallery-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.9) contrast(1.05);
+  transition: filter 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.gallery-item img.is-loaded,
+.gallery-item video.is-loaded {
+  opacity: 1;
+}
+
+.gallery-item:hover img,
+.gallery-item:hover video {
+  filter: brightness(1.05) contrast(1.1);
+  transform: scale(1.01);
+}
+
+.rating-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #ffffff;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.5rem;
+}
+
+.video-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #ffffff;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.5rem;
+}
+
+.play-icon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 2rem;
+  opacity: 0.8;
+  pointer-events: none;
+  text-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4rem;
+}
+
+.pagination a {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #e5e5e5;
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.pagination .page-disabled {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #e5e5e5;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.pagination a:hover {
+  opacity: 1;
+}
+
+/* ===== LIGHTBOX ===== */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.96);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+.lightbox video {
+  max-width: 90vw;
+  max-height: 85vh;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+  display: none;
+}
+
+/* Controls */
+.lightbox-controls {
+  position: fixed;
+  bottom: 3rem;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.lightbox-controls button {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.6);
+  color: #ffffff;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.lightbox-controls button:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: #ffffff;
+}
+
+.lightbox-hints {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.5rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.empty-state {
+  border: 1px dashed rgba(255,255,255,0.15);
+  padding: 2rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  opacity: 0.75;
+}

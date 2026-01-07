@@ -1,25 +1,7 @@
 import config
 from views.message_view import send_text, send_media
 from services.random_service import get_random_media
-from models.database import SessionLocal
-from models.model_entity import Model
-
-
-def _resolve_model_name(user_input: str | None) -> str | None:
-    if not user_input:
-        return None
-
-    tokens = user_input.strip().split()
-    last_name = tokens[-1].lower()
-
-    session = SessionLocal()
-    try:
-        for model in session.query(Model).all():
-            if model.name.lower() == last_name:
-                return model.name
-        return None
-    finally:
-        session.close()
+from services.model_service import resolve_model_name, find_model_matches
 
 
 async def random_command(update, context):
@@ -36,9 +18,18 @@ async def random_command(update, context):
         return
 
     raw_input = " ".join(context.args) if context.args else None
-    model_name = _resolve_model_name(raw_input)
+    model_name = resolve_model_name(raw_input)
 
     if raw_input and not model_name:
+        matches = find_model_matches(raw_input)
+        if len(matches) > 1:
+            await send_text(
+                context.bot,
+                chat_id,
+                "❌ Multiple matches: " + ", ".join(matches[:8])
+            )
+            return
+
         await send_text(
             context.bot,
             chat_id,

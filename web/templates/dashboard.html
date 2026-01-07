@@ -1,180 +1,10 @@
 {% extends "base.html" %}
 
+{% block head %}
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
 {% block content %}
-
-<style>
-  /* ---- BACKGROUND SLIDESHOW ---- */
-  #slideshow {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    background: #000;
-  }
-
-  #slideshow::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-    background: radial-gradient(
-      circle at 50% 50%,
-      rgba(255,255,255,0.7) 0%,
-      rgba(255,255,255,0.25) 25%,
-      rgba(255,255,255,0) 55%
-    );
-    mix-blend-mode: screen;
-    opacity: 0;
-  }
-
-  #slideshow::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 2;
-  }
-
-  #bg-single {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  #bg-single .bg-item {
-    position: absolute;
-    width: auto;
-    height: auto;
-    max-width: min(38vw, 420px);
-    max-height: min(56vh, 600px);
-    object-fit: contain;
-    border-radius: 10px;
-    opacity: 0;
-    filter: blur(0.2px) brightness(1.18) saturate(1.2) contrast(1.05);
-    animation: single-fade 3.2s ease-in-out infinite;
-    box-shadow: 0 18px 60px rgba(0,0,0,0.45);
-    transition: filter 240ms ease;
-  }
-
-  #bg-single .bg-item.is-loaded {
-    filter: blur(0.2px) brightness(1.18) saturate(1.2) contrast(1.05);
-  }
-
-  /* ---- TOP-RIGHT HUD NAV ---- */
-  .hud-nav {
-    position: fixed;
-    top: 4.2rem; /* below Pico navbar */
-    right: 2rem;
-    z-index: 4;
-
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-
-    color: rgba(255,255,255,0.7);
-  }
-
-  .hud-nav a {
-    color: #00bcd4;
-    text-decoration: none;
-  }
-
-  .hud-nav span {
-    opacity: 0.6;
-  }
-
-  /* ---- CONTROLS ---- */
-  .controls {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 5;
-    display: flex;
-    gap: 16px;
-  }
-
-  .controls button {
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 10px 16px;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    cursor: pointer;
-  }
-
-  .controls a {
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 10px 16px;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .hud-status {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 5;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-  }
-
-  .hero {
-    position: fixed;
-    inset: 0;
-    z-index: 4;
-    display: grid;
-    place-items: center;
-    pointer-events: none;
-    text-align: center;
-  }
-
-  .hero img {
-    width: 220px;
-    height: 220px;
-    object-fit: contain;
-    opacity: 0.95;
-    filter: drop-shadow(0 10px 26px rgba(0,0,0,0.6));
-  }
-
-  .hero p {
-    margin: 0.9rem 0 0;
-    font-size: 0.85rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-  }
-  /* Center card removed; background cloud only */
-
-  @keyframes single-fade {
-    0% {
-      opacity: 0;
-      transform: scale(0.98);
-    }
-    20% {
-      opacity: 0.65;
-      transform: scale(1);
-    }
-    70% {
-      opacity: 0.65;
-      transform: scale(1.01);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.02);
-    }
-  }
-</style>
 
 <!-- BACKGROUND -->
 <div id="slideshow">
@@ -203,72 +33,39 @@
 
 <!-- CONTROLS -->
 <div class="controls">
-  <button id="shuffle-toggle">SHUFFLE</button>
-  <button id="motion-toggle">PAUSE MOTION</button>
-  <a href="/logout">LOGOUT</a>
+  <button id="shuffle-toggle" aria-label="Shuffle background">SHUFFLE</button>
+  <button id="motion-toggle" aria-label="Pause background motion">PAUSE MOTION</button>
+  <a href="/logout" aria-label="Logout">LOGOUT</a>
+  <button id="logo-toggle" aria-label="Toggle logo">HIDE LOGO</button>
 </div>
 
 <div class="hud-status">Randomized • {{ media_count }} media</div>
 
-<script>
-  const images = {{ slideshow_images | default([]) | tojson }};
+<div id="rating-modal" class="rating-modal">
+  <div class="rating-card">
+    <h3 id="rating-title">Rate Image</h3>
+    <img id="rating-preview" class="rating-preview" alt="">
+    <label>
+      Rating
+      <div id="rating-value" class="rating-value">—</div>
+    </label>
+    <label>
+      Caption
+      <textarea id="rating-caption" rows="3" maxlength="280"></textarea>
+    </label>
+    <div class="rating-actions">
+      <button id="rating-submit" type="button" aria-label="Save rating">Save</button>
+      <button id="rating-cancel" type="button" aria-label="Close rating modal">Close</button>
+    </div>
+    <div id="rating-note" class="rating-note"></div>
+  </div>
+</div>
 
-  const bgImages = [
-    document.getElementById("bg-image-1"),
-    document.getElementById("bg-image-2"),
-    document.getElementById("bg-image-3"),
-  ];
-  const toggleBtn = document.getElementById("motion-toggle");
-  const shuffleBtn = document.getElementById("shuffle-toggle");
-
-  let paused = false;
-  let index = 0;
-
-  function pickImage() {
-    if (!images.length) return null;
-    const img = images[index];
-    index = (index + 1) % images.length;
-    return img;
-  }
-
-  function randomBetween(min, max) {
-    return Math.random() * (max - min) + min;
-  }
-
-  function refreshBackgroundImages() {
-    if (!images.length) return;
-    const slots = [
-      { left: "6%", top: "18%" },
-      { left: "36%", top: "8%" },
-      { left: "66%", top: "20%" },
-    ];
-
-    bgImages.forEach((img, i) => {
-      img.classList.remove("is-loaded");
-      img.src = pickImage();
-      img.style.left = slots[i].left;
-      img.style.top = slots[i].top;
-    });
-  }
-
-  toggleBtn.onclick = () => {
-    paused = !paused;
-    toggleBtn.textContent = paused ? "RESUME MOTION" : "PAUSE MOTION";
-  };
-
-  shuffleBtn.onclick = () => {
-    window.location.reload();
-  };
-
-  if (images.length) {
-    bgImages.forEach((img) => {
-      img.addEventListener("load", () => img.classList.add("is-loaded"));
-    });
-    refreshBackgroundImages();
-    bgImages[0].addEventListener("animationiteration", () => {
-      if (!paused) refreshBackgroundImages();
-    });
-  }
+<script id="dashboard-data" type="application/json">
+{{ {
+  "images": slideshow_images | default([])
+} | tojson }}
 </script>
+<script src="/static/js/dashboard.js"></script>
 
 {% endblock %}

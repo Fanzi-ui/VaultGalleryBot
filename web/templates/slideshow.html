@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/slideshow.css">
+{% endblock %}
+
+{% block content %}
+<div class="slideshow">
+  <div class="slideshow-stage" id="slideshow-stage">
+    <div class="slideshow-layer is-active" id="slide-a">
+      <img class="slide-media slide-image" alt="">
+      <video class="slide-media slide-video" muted playsinline></video>
+    </div>
+    <div class="slideshow-layer" id="slide-b">
+      <img class="slide-media slide-image" alt="">
+      <video class="slide-media slide-video" muted playsinline></video>
+    </div>
+    <div class="slideshow-vignette"></div>
+    <div class="slideshow-noise"></div>
+  </div>
+
+  <div class="slideshow-hud" id="slideshow-hud">
+    <div class="hud-left">
+      <div class="hud-title">Vault Slideshow</div>
+      <div class="hud-meta" id="hud-meta">Ready</div>
+    </div>
+    <div class="hud-right">
+      <button class="hud-button" id="hud-back">Dashboard</button>
+      <button class="hud-button" id="hud-toggle">Hide HUD</button>
+    </div>
+  </div>
+
+  <div class="slideshow-controls" id="slideshow-controls">
+    <div class="control-group">
+      <span class="control-label">Mode</span>
+      <div class="control-pills" role="group" aria-label="Slideshow mode">
+        <button class="pill active" data-mode="drift" aria-pressed="true">Drift</button>
+        <button class="pill" data-mode="cut" aria-pressed="false">Cut</button>
+        <button class="pill" data-mode="shuffle" aria-pressed="false">Shuffle</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="model-filter">Model</label>
+      <select id="model-filter">
+        <option value="">All models</option>
+        {% for model in models %}
+        <option value="{{ model }}">{{ model }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="type-filter">Type</label>
+      <select id="type-filter">
+        <option value="">All</option>
+        <option value="image">Images</option>
+        <option value="video">Videos</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="rating-filter">Rating</label>
+      <select id="rating-filter">
+        <option value="">Any</option>
+        <option value="rated">Rated only</option>
+        <option value="unrated">Unrated only</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="speed-range">Speed</label>
+      <input id="speed-range" type="range" min="4" max="16" value="8">
+      <span class="control-value" id="speed-value">8s</span>
+    </div>
+    <div class="control-group">
+      <button class="pill" id="pause-toggle">Pause</button>
+      <button class="pill" id="prev-toggle">Prev</button>
+      <button class="pill" id="next-toggle">Next</button>
+      <button class="pill" id="mute-toggle">Mute</button>
+      <button class="pill" id="fullscreen-toggle">Fullscreen</button>
+    </div>
+  </div>
+
+  <div class="slideshow-help">
+    Space pause • ←/→ navigate • M mute • F fullscreen • H HUD
+  </div>
+</div>
+
+<script id="slideshow-data" type="application/json">
+{{ {
+  "media": slideshow_media | default([]),
+  "tokenQuery": token_query
+} | tojson }}
+</script>
+<script src="/static/js/slideshow.js"></script>
+{% endblock %}

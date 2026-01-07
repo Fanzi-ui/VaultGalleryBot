@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/insights.css">
+{% endblock %}
+
+{% block content %}
+<div class="insights-header">
+  <div>
+    <h2>Model Insights</h2>
+    <p>Volume and rating performance by model.</p>
+  </div>
+  <div class="insights-meta">{{ insights|length }} models</div>
+</div>
+
+{% if insights %}
+  <div class="insights-table">
+    <div class="insights-row insights-row--head">
+      <div>Model</div>
+      <div>Media</div>
+      <div>Images</div>
+      <div>Videos</div>
+      <div>Rated</div>
+      <div>Avg Rating</div>
+      <div>Last Upload</div>
+      <div>Score Bands</div>
+    </div>
+    {% for item in insights %}
+    <div class="insights-row">
+      <div class="insights-model">{{ item.name }}</div>
+      <div>{{ item.total_media }}</div>
+      <div>{{ item.image_count }}</div>
+      <div>{{ item.video_count }}</div>
+      <div>{{ item.rated_images }} / {{ item.unrated_images }} unrated</div>
+      <div>
+        {% if item.avg_rating %}
+          {{ "%.1f"|format(item.avg_rating) }}
+        {% else %}
+          n/a
+        {% endif %}
+      </div>
+      <div>
+        {% if item.last_upload %}
+          {{ item.last_upload.strftime("%Y-%m-%d") }}
+        {% else %}
+          —
+        {% endif %}
+      </div>
+      <div class="insights-bands">
+        <span>90+: {{ item.rating_90 }}</span>
+        <span>80-89: {{ item.rating_80 }}</span>
+        <span><80: {{ item.rating_low }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">No models yet</div>
+{% endif %}
+{% endblock %}

@@ -8,6 +8,8 @@ from telegram.ext import (
 )
 
 import config
+from models.database import ensure_media_rating_columns, ensure_model_normalized_columns
+from services.rating_service import backfill_missing_ratings
 
 # --- Controllers (business logic) ---
 from controllers.start_controller import start_command             # /start
@@ -17,6 +19,8 @@ from controllers.random_controller import random_command           # /random
 from controllers.listmodels_controller import listmodels_command   # /listmodels
 from controllers.deletemedia_controller import deletemedia_command # /deletemedia
 from controllers.deleteallmedia_controller import deleteallmedia_command  # /deleteallmedia
+from controllers.latest_controller import latest_command           # /latest
+from controllers.stats_controller import stats_command             # /stats
 
 
 def main():
@@ -25,6 +29,10 @@ def main():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )
+
+    ensure_media_rating_columns()
+    ensure_model_normalized_columns()
+    backfill_missing_ratings()
 
     # --- Create Telegram application ---
     app = Application.builder().token(config.BOT_TOKEN).build()
@@ -36,6 +44,8 @@ def main():
     app.add_handler(CommandHandler("listmodels", listmodels_command))
     app.add_handler(CommandHandler("deletemedia", deletemedia_command))
     app.add_handler(CommandHandler("deleteallmedia", deleteallmedia_command))
+    app.add_handler(CommandHandler("latest", latest_command))
+    app.add_handler(CommandHandler("stats", stats_command))
 
     # --- Media upload handler ---
     app.add_handler(
