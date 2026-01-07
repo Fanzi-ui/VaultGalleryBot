@@ -84,6 +84,12 @@ Web admin:
 uvicorn web.main:app --reload
 ```
 
+Or run both together:
+
+```
+./run.sh
+```
+
 ---
 
 ## 🚀 Quick Start (New Users)
@@ -109,7 +115,15 @@ WEB_ADMIN_PASS=pass123
 pip install -r requirements.txt
 ```
 
-5) Start the services:
+5) Start the services (pick one option):
+
+- Option A: run both bot + web together
+```
+chmod +x run.sh
+./run.sh
+```
+
+- Option B: run them separately
 ```
 python app.py
 uvicorn web.main:app --reload
