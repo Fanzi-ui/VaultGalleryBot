@@ -81,6 +81,12 @@ Quick start (recommended):
 This launches the GUI installer every time so you can enter your own
 `BOT_TOKEN` and `AUTHORIZED_USERS`, then starts the bot + web UI.
 
+Headless servers (no GUI):
+
+```
+SKIP_SETUP=1 ./run.sh
+```
+
 ---
 
 ## 🚀 First-Time Install (New Users)
@@ -108,9 +114,55 @@ Defaults used automatically:
 
 After saving, the bot and web UI start automatically.
 
-6) Use the app:
+4) Use the app:
 - Telegram: `/upload <model name>` with a photo/video
 - Web: open `http://127.0.0.1:8000`, login, browse models and galleries
+
+---
+
+## ⚙️ Environment Variables
+
+- `BOT_TOKEN`: Telegram bot token (required)
+- `AUTHORIZED_USERS`: comma-separated numeric IDs (required)
+- `WEB_ADMIN_TOKEN`: token for session validation (default `some_random_secret`)
+- `WEB_ADMIN_USER`: admin username (default `admin`)
+- `WEB_ADMIN_PASS`: admin password (default `pass123`)
+- `WEB_SECURE_COOKIES`: set `true` when using HTTPS (default `false`)
+- `DATABASE_URL`: SQLAlchemy URL (default `sqlite:///gallery.db`)
+
+---
+
+## 🛠️ Troubleshooting
+
+- Logs are saved in `logs/` (`bot.log`, `web.log`, `install.log`).
+- If the bot says “Temporary failure in name resolution,” your DNS/network is down.
+- If the web UI doesn’t load, confirm `uvicorn` is running and port `8000` is free.
+
+---
+
+## 📦 Deployment Options
+
+Docker:
+
+```
+docker build -t vaultgallerybot .
+docker run --env-file .env -p 8000:8000 -v "$PWD/media:/app/media" -v "$PWD/gallery.db:/app/gallery.db" vaultgallerybot
+```
+
+Docker Compose:
+
+```
+docker compose up --build
+```
+
+Systemd:
+
+- Copy `deploy/vaultgallerybot.service` to `/etc/systemd/system/`
+- Update the `User` and `WorkingDirectory` fields
+- Enable/start:
+```
+sudo systemctl enable --now vaultgallerybot
+```
 
 
 

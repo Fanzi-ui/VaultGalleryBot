@@ -1,0 +1,15 @@
+[Unit]
+Description=VaultGalleryBot
+After=network.target
+
+[Service]
+Type=simple
+User=CHANGE_ME
+WorkingDirectory=/opt/VaultGalleryBot
+Environment=SKIP_SETUP=1
+ExecStart=/bin/bash -lc '/opt/VaultGalleryBot/run.sh'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

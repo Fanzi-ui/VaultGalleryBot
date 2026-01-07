@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 try:
@@ -11,6 +12,7 @@ except Exception:  # noqa: BLE001
 
 ENV_FILE = Path(".env")
 EXAMPLE_FILE = Path(".env.example")
+BOT_TOKEN_RE = re.compile(r"^\d+:[A-Za-z0-9_-]{20,}$")
 
 
 def load_env_file(path: Path) -> dict:
@@ -46,6 +48,14 @@ def normalize_authorized_users(value: str) -> tuple[bool, str, str]:
     return True, "", ",".join(parts)
 
 
+def validate_bot_token(token: str) -> tuple[bool, str]:
+    if not token.strip():
+        return False, "BOT_TOKEN is required."
+    if not BOT_TOKEN_RE.match(token.strip()):
+        return False, "BOT_TOKEN format looks invalid."
+    return True, ""
+
+
 def prompt_value(key: str, default_value: str = "", secret: bool = False) -> str:
     prompt_suffix = f" [{default_value}]" if default_value else ""
     if secret:
@@ -76,10 +86,12 @@ def ensure_env_cli() -> int:
     print("Web admin credentials use defaults from the README.")
 
     bot_token = ""
-    while not bot_token:
+    while True:
         bot_token = prompt_value("BOT_TOKEN", "", True)
-        if not bot_token:
-            print("BOT_TOKEN is required.")
+        ok, error = validate_bot_token(bot_token)
+        if ok:
+            break
+        print(error)
 
     default_users = ""
     authorized_users = prompt_value("AUTHORIZED_USERS", default_users)
@@ -153,8 +165,9 @@ def ensure_env_gui() -> int:
     def on_save() -> None:
         bot_token = fields["BOT_TOKEN"].get().strip()
         authorized_users = fields["AUTHORIZED_USERS"].get().strip()
-        if not bot_token:
-            messagebox.showerror("Missing BOT_TOKEN", "BOT_TOKEN is required.")
+        ok, error = validate_bot_token(bot_token)
+        if not ok:
+            messagebox.showerror("Invalid BOT_TOKEN", error)
             return
 
         ok, error, authorized_users = normalize_authorized_users(authorized_users)

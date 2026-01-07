@@ -10,7 +10,11 @@ from telegram.ext import (
 )
 
 import config
-from models.database import ensure_media_rating_columns, ensure_model_normalized_columns
+from models.database import (
+    ensure_media_rating_columns,
+    ensure_model_normalized_columns,
+    init_db,
+)
 from services.rating_service import backfill_missing_ratings
 
 # --- Controllers (business logic) ---
@@ -54,6 +58,7 @@ def main():
         level=logging.INFO,
     )
 
+    init_db()
     ensure_media_rating_columns()
     ensure_model_normalized_columns()
     backfill_missing_ratings()

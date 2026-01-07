@@ -1,10 +1,15 @@
 from pathlib import Path
+import os
 import sqlite3
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATABASE_URL = f"sqlite:///{BASE_DIR / 'gallery.db'}"
+DEFAULT_DB_PATH = BASE_DIR / "gallery.db"
+DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{DEFAULT_DB_PATH}"
+DB_URL = make_url(DATABASE_URL)
+IS_SQLITE = DB_URL.drivername.startswith("sqlite")
 
 
 class Base(DeclarativeBase):
@@ -23,9 +28,14 @@ SessionLocal = sessionmaker(
     autocommit=False
 )
 
+def init_db() -> None:
+    Base.metadata.create_all(engine)
+
 
 def ensure_media_rating_columns() -> None:
-    db_path = BASE_DIR / "gallery.db"
+    if not IS_SQLITE:
+        return
+    db_path = Path(DB_URL.database) if DB_URL.database else DEFAULT_DB_PATH
     if not db_path.exists():
         return
 
@@ -49,7 +59,9 @@ def _normalize_model_key(value: str) -> str:
 
 
 def ensure_model_normalized_columns() -> None:
-    db_path = BASE_DIR / "gallery.db"
+    if not IS_SQLITE:
+        return
+    db_path = Path(DB_URL.database) if DB_URL.database else DEFAULT_DB_PATH
     if not db_path.exists():
         return
 

@@ -65,11 +65,13 @@ install_deps >"$INSTALL_LOG" 2>&1 || {
   echo "Dependency install failed. Check $INSTALL_LOG."
   exit 1
 }
-echo "Launching setup..."
-python install.py || {
-  echo "Setup failed. Run python install.py to retry."
-  exit 1
-}
+if [ "${SKIP_SETUP:-0}" != "1" ]; then
+  echo "Launching setup..."
+  python install.py || {
+    echo "Setup failed. Run python install.py to retry."
+    exit 1
+  }
+fi
 load_env || exit 1
 
 python app.py >"$BOT_LOG" 2>&1 &

@@ -4,7 +4,14 @@ from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from web.auth import SERVER_SESSION_TOKEN, verify_admin_credentials
+from web.auth import (
+    SERVER_SESSION_TOKEN,
+    is_login_blocked,
+    record_failed_login,
+    reset_login_attempts,
+    secure_cookies_enabled,
+    verify_admin_credentials,
+)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
@@ -24,12 +31,25 @@ def login_submit(
     username: str = Form(...),
     password: str = Form(...),
 ):
+    client_ip = request.client.host if request.client else "unknown"
+    blocked, retry_after = is_login_blocked(client_ip)
+    if blocked:
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": f"Too many attempts. Try again in {retry_after}s.",
+            },
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
     if not verify_admin_credentials(username, password):
+        record_failed_login(client_ip)
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid username or password"},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
+    reset_login_attempts(client_ip)
 
     admin_token = os.getenv("WEB_ADMIN_TOKEN")
     if not admin_token:
@@ -39,17 +59,20 @@ def login_submit(
         )
 
     response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    cookie_secure = secure_cookies_enabled()
     response.set_cookie(
         "admin_token",
         admin_token,
         httponly=True,
         samesite="lax",
+        secure=cookie_secure,
     )
     response.set_cookie(
         "session_token",
         SERVER_SESSION_TOKEN,
         httponly=True,
         samesite="lax",
+        secure=cookie_secure,
     )
     return response
 
