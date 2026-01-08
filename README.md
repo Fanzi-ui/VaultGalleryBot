@@ -120,6 +120,18 @@ After saving, the bot and web UI start automatically.
 
 ---
 
+## ✅ Success Checklist
+
+- `./run.sh` opens the setup GUI and saves `.env`
+- Terminal shows:
+  - `VaultGalleryBot is running.`
+  - `Bot: READY`
+  - `Web: READY (http://127.0.0.1:8000)`
+- Telegram bot responds to `/start`
+- Web UI loads at `http://127.0.0.1:8000`
+
+---
+
 ## ⚙️ Environment Variables
 
 - `BOT_TOKEN`: Telegram bot token (required)
