@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/upload.css">
+{% endblock %}
+
+{% block content %}
+  <div class="upload-header">
+    <h2>Bulk Upload Media</h2>
+    <p>Upload up to 50 image or video files at once.</p>
+  </div>
+
+  <form id="upload-form" class="upload-form">
+    <fieldset class="model-picker">
+      <legend>Model</legend>
+      <label class="model-option">
+        <input type="radio" name="model_mode" value="existing" checked>
+        Choose existing
+      </label>
+      <select id="model-select" name="model_id">
+        <option value="">Loading models...</option>
+      </select>
+
+      <label class="model-option">
+        <input type="radio" name="model_mode" value="new">
+        Create new
+      </label>
+      <input
+        type="text"
+        id="model-name-input"
+        name="model_name"
+        placeholder="Enter new model name"
+        disabled
+      />
+    </fieldset>
+
+    <label for="file-input">Select Files (Max 50):</label>
+    <input
+      type="file"
+      id="file-input"
+      name="files"
+      accept="image/*,video/*"
+      multiple
+      required
+    />
+
+    <button type="submit" id="upload-button" class="contrast">
+      Upload Files
+    </button>
+  </form>
+
+  <div id="upload-progress-container" class="upload-progress-container" style="display: none;">
+    <progress id="upload-progress" value="0" max="100"></progress>
+    <p id="progress-text">0% Uploaded</p>
+  </div>
+
+  <div id="upload-results" class="upload-results">
+    <!-- Upload results will be displayed here -->
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/upload.js?v=1.1"></script>
+{% endblock %}

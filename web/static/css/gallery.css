@@ -24,6 +24,13 @@ body {
   gap: 1.4rem 2.5rem;
   align-items: center;
   margin-bottom: 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(5,5,5,0.9);
+  padding: 0.9rem 0;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .toolbar-group {
@@ -65,7 +72,19 @@ body {
   letter-spacing: 0.25em;
   text-transform: uppercase;
   opacity: 0.75;
+}
+
+.toolbar-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.pill.pill-ghost {
+  background: transparent;
+  border-color: rgba(255,255,255,0.25);
+  opacity: 0.85;
 }
 
 /* Grid */
@@ -245,6 +264,25 @@ body {
   opacity: 0.7;
 }
 
+.lightbox-meta {
+  position: fixed;
+  bottom: 6.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 0.3rem;
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f2f2f2;
+  opacity: 0.9;
+}
+
+.gallery-sentinel {
+  height: 1px;
+}
+
 .empty-state {
   border: 1px dashed rgba(255,255,255,0.15);
   padding: 2rem;
@@ -253,4 +291,47 @@ body {
   text-transform: uppercase;
   font-size: 0.7rem;
   opacity: 0.75;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+
+@media (max-width: 768px) {
+  .gallery-header {
+    margin-bottom: 2rem;
+  }
+
+  .gallery-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .toolbar-actions {
+    margin-left: 0;
+  }
+
+  .toolbar-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .gallery-grid {
+    gap: 1.5rem;
+  }
+
+  .pagination {
+    margin-top: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .gallery-toolbar {
+    gap: 1rem;
+  }
 }

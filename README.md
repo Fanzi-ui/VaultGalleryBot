@@ -1,6 +1,6 @@
 # VaultGalleryBot
 
-VaultGalleryBot is a private Telegram bot + web admin that lets you upload, store, and view images and videos of models using simple chat commands and a dashboard.
+VaultGalleryBot is a private web admin + API that lets you upload, store, and view images and videos of models using a dashboard and authenticated endpoints.
 
 It acts as a personal media vault with a clean backend architecture.
 
@@ -8,50 +8,44 @@ It acts as a personal media vault with a clean backend architecture.
 
 ## ✨ What This App Does
 
-- Upload images and videos via Telegram
+- Upload images and videos via the web UI or API
 - Organize media by model name
 - Store media files on disk and metadata in SQLite
-- Retrieve random media (all models or a specific model)
 - Browse models and galleries in a web admin UI
 - Delete media or entire models from the admin UI
 - Restrict access to authorized users only
 
 ---
 
-## 🧱 Architecture (MVC)
+## 🧱 Architecture
 
-This project uses a clean MVC-style structure:
+This project uses a clean layered structure:
 
-- **Controllers**
-  - Handle Telegram commands
-  - Parse user input
-  - Enforce permissions
+- **Web routes**
+  - FastAPI endpoints for admin UI + API
+  - Auth + request validation
 
 - **Services**
   - File storage logic
   - Database queries
-  - Random selection logic
 
 - **Models**
   - Database tables (SQLAlchemy)
   - Model and media relationships
 
-- **Views**
-  - Send messages
-  - Send images and videos to Telegram
+- **Templates/Static**
+  - Jinja templates + CSS/JS for the admin UI
 
 ---
 
 ## 📁 Project Structure
 
 VaultGalleryBot/
-├── app.py
 ├── config.py
 ├── .env
-├── controllers/
 ├── services/
 ├── models/
-├── views/
+├── web/
 ├── media/
 │ └── models/
 ├── requirements.txt
@@ -68,7 +62,22 @@ The web admin requires a token and a login:
 
 Defaults are `some_random_secret`, `admin`, and `pass123` if you do not set them.
 
+## 📱 Mobile/API Auth
+
+API clients can log in via `POST /api/login` with a JSON body:
+
+```json
+{"username": "admin", "password": "pass123"}
+```
+
+The response returns `{"token": "..."}`. Send it on API requests as:
+
+`Authorization: Bearer <token>`
+
+You can also use `WEB_ADMIN_TOKEN` directly if you do not want an API login step.
+
 ---
+
 
 ## ▶️ Running
 
@@ -79,7 +88,7 @@ Quick start (recommended):
 ```
 
 This launches the GUI installer every time so you can enter your own
-`BOT_TOKEN` and `AUTHORIZED_USERS`, then starts the bot + web UI.
+web admin credentials, then starts the web UI.
 
 Headless servers (no GUI):
 
@@ -104,18 +113,17 @@ chmod +x run.sh
 ```
 
 3) In the GUI installer, provide:
-- `BOT_TOKEN`: from Telegram `@BotFather` (`/newbot`)
-- `AUTHORIZED_USERS`: your numeric Telegram ID (get via `@userinfobot`)
+- `WEB_ADMIN_TOKEN`: token for API access
+- `WEB_ADMIN_USER` / `WEB_ADMIN_PASS`: login credentials
 
 Defaults used automatically:
 - `WEB_ADMIN_TOKEN=some_random_secret`
 - `WEB_ADMIN_USER=admin`
 - `WEB_ADMIN_PASS=pass123`
 
-After saving, the bot and web UI start automatically.
+After saving, the web UI starts automatically.
 
 4) Use the app:
-- Telegram: `/upload <model name>` with a photo/video
 - Web: open `http://127.0.0.1:8000`, login, browse models and galleries
 
 ---
@@ -125,17 +133,13 @@ After saving, the bot and web UI start automatically.
 - `./run.sh` opens the setup GUI and saves `.env`
 - Terminal shows:
   - `VaultGalleryBot is running.`
-  - `Bot: READY`
   - `Web: READY (http://127.0.0.1:8000)`
-- Telegram bot responds to `/start`
 - Web UI loads at `http://127.0.0.1:8000`
 
 ---
 
 ## ⚙️ Environment Variables
 
-- `BOT_TOKEN`: Telegram bot token (required)
-- `AUTHORIZED_USERS`: comma-separated numeric IDs (required)
 - `WEB_ADMIN_TOKEN`: token for session validation (default `some_random_secret`)
 - `WEB_ADMIN_USER`: admin username (default `admin`)
 - `WEB_ADMIN_PASS`: admin password (default `pass123`)
@@ -146,8 +150,7 @@ After saving, the bot and web UI start automatically.
 
 ## 🛠️ Troubleshooting
 
-- Logs are saved in `logs/` (`bot.log`, `web.log`, `install.log`).
-- If the bot says “Temporary failure in name resolution,” your DNS/network is down.
+- Logs are saved in `logs/` (`web.log`, `install.log`).
 - If the web UI doesn’t load, confirm `uvicorn` is running and port `8000` is free.
 
 ---

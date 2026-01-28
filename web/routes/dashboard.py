@@ -6,7 +6,7 @@ import random
 from models.database import SessionLocal
 from models.model_entity import Model
 from models.media_entity import Media
-from web.auth import get_request_token, is_admin_request
+from web.auth import is_admin_request
 
 router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
@@ -76,9 +76,6 @@ def dashboard(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-
     try:
         model_count = session.query(Model).count()
         media_count = session.query(Media).count()
@@ -96,8 +93,6 @@ def dashboard(request: Request):
             "model_count": model_count,
             "media_count": media_count,
             "slideshow_images": slideshow_images,
-            "token": token,
-            "token_query": token_query,
         },
     )
 
@@ -108,9 +103,6 @@ def slideshow(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-
     try:
         models = [model.name for model in session.query(Model).order_by(Model.name).all()]
         slideshow_media = _collect_slideshow_media(session, ["image", "video"])
@@ -123,8 +115,6 @@ def slideshow(request: Request):
             "request": request,
             "models": models,
             "slideshow_media": slideshow_media,
-            "token": token,
-            "token_query": token_query,
             "hide_nav": True,
         },
     )

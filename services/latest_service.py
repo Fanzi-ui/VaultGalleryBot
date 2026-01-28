@@ -5,10 +5,17 @@ from models.model_entity import Model
 from models.media_entity import Media
 
 
-def get_latest_media(model_name: str | None = None, limit: int = 1) -> list[dict]:
+def get_latest_media(
+    model_name: str | None = None,
+    limit: int = 1,
+    count: int | None = None,
+) -> list[dict]:
     session = SessionLocal()
     try:
-        query = session.query(Media)
+        if count is not None:
+            limit = count
+
+        query = session.query(Media, Model).join(Model, Media.model_id == Model.id)
 
         if model_name:
             model = session.query(Model).filter_by(name=model_name).first()
@@ -27,8 +34,9 @@ def get_latest_media(model_name: str | None = None, limit: int = 1) -> list[dict
             {
                 "file_path": media.file_path,
                 "media_type": media.media_type,
+                "model_name": model.name,
             }
-            for media in media_items
+            for media, model in media_items
         ]
     finally:
         session.close()

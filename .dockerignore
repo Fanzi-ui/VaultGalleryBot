@@ -1,0 +1,12 @@
+__pycache__/
+venv/
+logs/
+media/
+gallery.db
+.env
+.git
+.gitignore
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd

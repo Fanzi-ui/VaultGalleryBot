@@ -1,7 +1,5 @@
 const modelsDataEl = document.getElementById("models-data");
 const modelsData = modelsDataEl ? JSON.parse(modelsDataEl.textContent) : {};
-const adminToken = modelsData.adminToken || "";
-const tokenQuery = adminToken ? `?token=${encodeURIComponent(adminToken)}` : "";
 const searchInput = document.getElementById("model-search");
 const filterButtons = document.querySelectorAll(".pill[data-filter]");
 const visibleCount = document.getElementById("models-visible-count");
@@ -12,9 +10,8 @@ function deleteModel(slug) {
     return;
   }
 
-  fetch(`/models/${slug}${tokenQuery}`, {
+  fetch(`/models/${slug}`, {
     method: "DELETE",
-    headers: adminToken ? { "X-Admin-Token": adminToken } : {}
   }).then((res) => {
     if (res.ok) {
       location.reload();

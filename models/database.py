@@ -122,3 +122,32 @@ def ensure_model_normalized_columns() -> None:
         )
 
         conn.commit()
+
+
+def ensure_model_card_columns() -> None:
+    if not IS_SQLITE:
+        return
+    db_path = Path(DB_URL.database) if DB_URL.database else DEFAULT_DB_PATH
+    if not db_path.exists():
+        return
+
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='models'")
+        if cursor.fetchone() is None:
+            return
+        cursor.execute("PRAGMA table_info(models)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        if "popularity" not in columns:
+            cursor.execute("ALTER TABLE models ADD COLUMN popularity INTEGER")
+        if "versatility" not in columns:
+            cursor.execute("ALTER TABLE models ADD COLUMN versatility INTEGER")
+        if "longevity" not in columns:
+            cursor.execute("ALTER TABLE models ADD COLUMN longevity INTEGER")
+        if "industry_impact" not in columns:
+            cursor.execute("ALTER TABLE models ADD COLUMN industry_impact INTEGER")
+        if "fan_appeal" not in columns:
+            cursor.execute("ALTER TABLE models ADD COLUMN fan_appeal INTEGER")
+
+        conn.commit()

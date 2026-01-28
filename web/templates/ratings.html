@@ -32,6 +32,10 @@
             {% endif %}
           </div>
           <textarea rows="3" maxlength="280" placeholder="Add a caption"></textarea>
+          <div class="caption-meta">
+            <span class="caption-count">0/280</span>
+            <span class="caption-hint">Ctrl+Enter to save • Esc to skip</span>
+          </div>
           <div class="rating-actions">
             <button class="pill save-rating">Save</button>
             <button class="pill skip-rating">Skip</button>
@@ -46,9 +50,7 @@
 {% endif %}
 
 <script id="ratings-data" type="application/json">
-{{ {
-  "adminToken": token
-} | tojson }}
+{{ {} | tojson }}
 </script>
 <script src="/static/js/ratings.js"></script>
 {% endblock %}

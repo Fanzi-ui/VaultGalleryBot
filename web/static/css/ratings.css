@@ -87,6 +87,24 @@ body {
   letter-spacing: 0.1em;
 }
 
+.caption-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.caption-count {
+  color: rgba(255,255,255,0.85);
+}
+
+.caption-hint {
+  color: rgba(255,255,255,0.55);
+}
+
 .rating-actions {
   display: flex;
   gap: 0.6rem;

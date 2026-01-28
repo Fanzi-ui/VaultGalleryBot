@@ -1,161 +1,56 @@
 from pathlib import Path
-from datetime import datetime
 import config
-from models.database import SessionLocal
-from models.model_entity import Model
 from models.media_entity import Media
 import logging
-import time
-from services.rating_service import compute_rating_for_path
+import shutil
+import aiofiles
+from sqlalchemy.orm import Session
+from services import model_service # Import model_service to use its create_media_record
 
+logger = logging.getLogger(__name__)
 
 def normalize_model_name(name: str) -> str:
     return name.strip().lower().replace(" ", "_")
 
-
-def _normalize_model_key(value: str) -> str:
-    return " ".join(value.lower().replace("_", " ").split())
-
-
-async def save_media(update, context, model_name: str) -> str:
-    """
-    Save media to disk AND record it in the database.
-    Supports bulk (album) uploads safely.
-    """
-
-    message = update.message
-    model_slug = normalize_model_name(model_name)
-
-    # --- FILESYSTEM ---
+async def save_uploaded_media(db: Session, model_id: int, file: bytes, filename: str, media_type: str) -> Media:
+    model = model_service.get_model_by_id_with_session(db, model_id)
+    if not model:
+        raise ValueError(f"Model with ID {model_id} not found.")
+    
+    model_slug = normalize_model_name(model.name)
     model_dir = Path(config.MEDIA_ROOT) / model_slug
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    if message.photo:
-        media_obj = message.photo[-1]
-        media_type = "image"
-        extension = ".jpg"
-        unique_id = media_obj.file_unique_id
-
-    elif message.video:
-        media_obj = message.video
-        media_type = "video"
-        extension = ".mp4"
-        unique_id = media_obj.file_unique_id
-
-    else:
-        raise ValueError("Unsupported media type")
-
-    # UNIQUE filename (prevents overwrite in albums)
-    filename = f"{unique_id}{extension}"
     file_path = model_dir / filename
 
-    tg_file = await context.bot.get_file(media_obj.file_id)
-    await tg_file.download_to_drive(custom_path=str(file_path))
+    async with aiofiles.open(file_path, 'wb') as out_file:
+        await out_file.write(file)
+    
+    # Create media record in the database
+    media_record = model_service.create_media_record(db, model_id, str(file_path), media_type)
+    return media_record
 
-    _save_media_record(model_name, str(file_path), media_type)
+def delete_media_files(media_records: list[Media]) -> None:
+    for media in media_records:
+        file_path = Path(media.file_path)
+        if file_path.exists():
+            try:
+                file_path.unlink()  # Delete the file
+                logger.info(f"Deleted media file: {file_path}")
+            except OSError as e:
+                logger.error(f"Error deleting file {file_path}: {e}")
+        else:
+            logger.warning(f"Media file not found, skipping: {file_path}")
 
-    return str(file_path)
 
-
-async def save_media_file(context, model_name: str, file_id: str, unique_id: str, media_type: str) -> str:
-    """
-    Save media from Telegram file_id to disk and record it in the database.
-    """
+def delete_model_directory(model_name: str) -> None:
     model_slug = normalize_model_name(model_name)
     model_dir = Path(config.MEDIA_ROOT) / model_slug
-    model_dir.mkdir(parents=True, exist_ok=True)
-
-    if media_type == "image":
-        extension = ".jpg"
-    elif media_type == "video":
-        extension = ".mp4"
+    if model_dir.exists() and model_dir.is_dir():
+        try:
+            shutil.rmtree(model_dir)  # Delete the directory and all its contents
+            logger.info(f"Deleted model directory: {model_dir}")
+        except OSError as e:
+            logger.error(f"Error deleting directory {model_dir}: {e}")
     else:
-        raise ValueError("Unsupported media type")
-
-    filename = f"{unique_id}{extension}"
-    file_path = model_dir / filename
-
-    tg_file = await context.bot.get_file(file_id)
-    await tg_file.download_to_drive(custom_path=str(file_path))
-
-    _save_media_record(model_name, str(file_path), media_type)
-
-    return str(file_path)
-
-
-def _save_media_record(model_name: str, file_path: str, media_type: str) -> None:
-    session = SessionLocal()
-    try:
-        normalized_name = _normalize_model_key(model_name)
-        model = (
-            session.query(Model)
-            .filter(Model.normalized_name == normalized_name)
-            .first()
-        )
-        if not model:
-            for candidate in session.query(Model).all():
-                if _normalize_model_key(candidate.name) == normalized_name:
-                    model = candidate
-                    if candidate.normalized_name != normalized_name:
-                        candidate.normalized_name = normalized_name
-                        session.flush()
-                    break
-        if not model:
-            cleaned_name = " ".join(model_name.split())
-            model = Model(
-                name=cleaned_name,
-                normalized_name=normalized_name,
-            )
-            session.add(model)
-            session.flush()
-
-        existing_media = (
-            session.query(Media)
-            .filter(Media.file_path == str(file_path))
-            .first()
-        )
-        if existing_media:
-            logging.getLogger(__name__).info(
-                "Media already exists for %s; skipping duplicate row.",
-                file_path,
-            )
-            return
-
-        rating = None
-        if media_type == "image":
-            for _ in range(3):
-                rating = compute_rating_for_path(str(file_path))
-                if rating is not None:
-                    break
-                time.sleep(0.2)
-
-            if rating is None:
-                logging.getLogger(__name__).warning(
-                    "Rating missing for %s",
-                    file_path,
-                )
-
-        media = Media(
-            model_id=model.id,
-            file_path=str(file_path),
-            media_type=media_type,
-            rating=rating,
-        )
-        session.add(media)
-        session.commit()
-
-        if media_type == "image" and rating is None:
-            for _ in range(5):
-                rating = compute_rating_for_path(str(file_path))
-                if rating is not None:
-                    media.rating = rating
-                    media.rated_at = datetime.utcnow()
-                    session.commit()
-                    break
-                time.sleep(0.4)
-
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+        logger.warning(f"Model directory not found, skipping: {model_dir}")

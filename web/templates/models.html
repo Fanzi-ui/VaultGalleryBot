@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <link rel="stylesheet" href="/static/css/models.css">
+    <link rel="stylesheet" href="/static/css/models.css?v=1.5">
 {% endblock %}
 
 {% block content %}
 
 <div class="models-header">
-    <h2>Models</h2>
-    <div class="models-count">
-        {{ models|length }} TOTAL • <span id="models-visible-count">{{ models|length }}</span> SHOWN
+    <div>
+        <h2>Models</h2>
+        <div class="models-count">
+            {{ models|length }} TOTAL • <span id="models-visible-count">{{ models|length }}</span> SHOWN
+        </div>
+    </div>
+    <div class="models-header-actions">
+        <a class="pill-link" href="/upload">Add Model</a>
     </div>
 </div>
 
@@ -68,7 +73,7 @@
                 {% endif %}
 
                 <div class="model-actions">
-                    <a href="/models/{{ model.slug }}{{ token_query }}">View Gallery →</a>
+                    <a href="/models/{{ model.slug }}">View Gallery →</a>
                     <button onclick="deleteModel('{{ model.slug }}')" aria-label="Delete {{ model.name }}">Delete</button>
                 </div>
             </div>
@@ -80,9 +85,7 @@
 {% endif %}
 
 <script id="models-data" type="application/json">
-{{ {
-    "adminToken": token
-} | tojson }}
+{{ {} | tojson }}
 </script>
 <script src="/static/js/models.js"></script>
 

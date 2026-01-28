@@ -19,8 +19,11 @@
         <button type="button" class="pill" data-type-filter="video" aria-pressed="false">Videos</button>
       </div>
     </div>
-    <div class="toolbar-meta">
-      <span id="gallery-visible-count">{{ media|length }}</span> / {{ media|length }} shown
+    <div class="toolbar-actions">
+      <div class="toolbar-meta">
+        <span id="gallery-visible-count">{{ media|length }}</span> / {{ media|length }} shown
+      </div>
+      <button type="button" class="pill pill-ghost" data-action="reset-filters">Clear</button>
     </div>
   </div>
 
@@ -56,12 +59,12 @@
 
 <nav class="pagination">
   {% if has_prev %}
-    <a href="?page={{ page - 1 }}{{ page_token_query }}">← Prev</a>
+    <a href="?page={{ page - 1 }}">← Prev</a>
   {% else %}
     <span class="page-disabled">← Prev</span>
   {% endif %}
   {% if has_next %}
-    <a href="?page={{ page + 1 }}{{ page_token_query }}">Next →</a>
+    <a href="?page={{ page + 1 }}">Next →</a>
   {% else %}
     <span class="page-disabled">Next →</span>
   {% endif %}
@@ -71,21 +74,24 @@
   <img id="lightboxImage">
   <video id="lightboxVideo" controls playsinline></video>
   <div class="lightbox-hints">←/→ Next • Esc Close • Delete</div>
+  <div class="lightbox-meta">
+    <div id="lightbox-model"></div>
+    <div id="lightbox-details"></div>
+  </div>
   <div class="lightbox-controls">
-    <button onclick="deleteCurrent()" aria-label="Delete current media">Delete</button>
-    <button onclick="closeLightbox()" aria-label="Close lightbox">Close</button>
+    <button id="lightbox-delete" type="button" aria-label="Delete current media">Delete</button>
+    <button id="lightbox-close" type="button" aria-label="Close lightbox">Close</button>
   </div>
 </div>
 
 <script id="gallery-data" type="application/json">
 {{ {
   "media": media,
-  "adminToken": token,
   "hasNextPage": has_next,
   "hasPrevPage": has_prev,
-  "nextPageUrl": "?page=" ~ (page + 1) ~ page_token_query,
-  "prevPageUrl": "?page=" ~ (page - 1) ~ page_token_query
+  "nextPageUrl": "?page=" ~ (page + 1),
+  "prevPageUrl": "?page=" ~ (page - 1)
 } | tojson }}
 </script>
-<script src="/static/js/gallery.js"></script>
+<script src="/static/js/gallery.js?v=1.5"></script>
 {% endblock %}

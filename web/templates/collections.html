@@ -16,24 +16,23 @@
   <div class="collection-card">
     <div class="collection-title">Top Rated</div>
     <div class="collection-meta">Rated images only</div>
-    <a class="collection-link" href="/slideshow?rating=rated{{ '&token=' ~ token if token else '' }}">Launch →</a>
+    <a class="collection-link" href="/slideshow?rating=rated">Launch →</a>
   </div>
   <div class="collection-card">
     <div class="collection-title">Unrated Queue</div>
     <div class="collection-meta">Needs captions</div>
-    <a class="collection-link" href="/slideshow?rating=unrated{{ '&token=' ~ token if token else '' }}">Launch →</a>
+    <a class="collection-link" href="/slideshow?rating=unrated">Launch →</a>
   </div>
   <div class="collection-card">
     <div class="collection-title">Video Loop</div>
     <div class="collection-meta">All videos</div>
-    <a class="collection-link" href="/slideshow?type=video{{ '&token=' ~ token if token else '' }}">Launch →</a>
+    <a class="collection-link" href="/slideshow?type=video">Launch →</a>
   </div>
 </div>
 
 <div class="builder">
   <div class="builder-title">Build a Custom Slideshow</div>
   <form class="builder-form" action="/slideshow" method="get">
-    <input type="hidden" name="token" value="{{ token }}">
     <label>
       Model
       <select name="model">

@@ -23,6 +23,7 @@
     <div class="hud-left">
       <div class="hud-title">Vault Slideshow</div>
       <div class="hud-meta" id="hud-meta">Ready</div>
+      <div class="hud-counter" id="hud-counter">0 / 0</div>
     </div>
     <div class="hud-right">
       <button class="hud-button" id="hud-back">Dashboard</button>
@@ -85,8 +86,7 @@
 
 <script id="slideshow-data" type="application/json">
 {{ {
-  "media": slideshow_media | default([]),
-  "tokenQuery": token_query
+  "media": slideshow_media | default([])
 } | tojson }}
 </script>
 <script src="/static/js/slideshow.js"></script>

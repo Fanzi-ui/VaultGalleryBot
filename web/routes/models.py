@@ -1,140 +1,61 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List, Dict, Any
 
-from pathlib import Path
+from web.schemas import ModelResponse, ModelCreate, ModelUpdate
+from web.dependencies import get_db
+from services import model_service, storage_service
+from models.model_entity import Model # Only needed for type hints
 
-from models.database import SessionLocal
-from models.model_entity import Model
-from models.media_entity import Media
-from services.media_cleanup_service import _delete_media_file
-from web.auth import require_admin_token, get_request_token
-from sqlalchemy import func
+from web.auth import require_api_key # Import the new API key dependency
 
-router = APIRouter(prefix="/models", dependencies=[Depends(require_admin_token)])
-templates = Jinja2Templates(directory="web/templates")
-
-MEDIA_ROOT = Path("media/models")
+router = APIRouter(prefix="/api/models", tags=["models"], dependencies=[Depends(require_api_key)])
 
 
-def normalize_model_name(name: str) -> str:
-    return name.strip().lower().replace(" ", "_")
+@router.post("/", response_model=ModelResponse, status_code=status.HTTP_201_CREATED)
+def create_model_endpoint(model_create: ModelCreate, db: Session = Depends(get_db)):
+    # Check if a model with the same normalized name already exists
+    normalized_name = model_service._normalize_model_query(model_create.name)
+    existing_model = db.query(Model).filter(Model.normalized_name == normalized_name).first()
+    if existing_model:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Model with this name already exists.")
 
+    created_model = model_service.create_model(db, model_create)
+    return created_model
 
-@router.get("")
-def list_models(request: Request):
-    session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-    try:
-        models_data = []
+@router.get("/", response_model=List[ModelResponse])
+def get_all_models_endpoint(db: Session = Depends(get_db)):
+    models = model_service.get_all_models(db)
+    return models
 
-        models = session.query(Model).all()
-        for model in models:
-            count = (
-                session.query(Media)
-                .filter(Media.model_id == model.id)
-                .count()
-            )
-            image_count = (
-                session.query(Media)
-                .filter(Media.model_id == model.id)
-                .filter(Media.media_type == "image")
-                .count()
-            )
-            video_count = (
-                session.query(Media)
-                .filter(Media.model_id == model.id)
-                .filter(Media.media_type == "video")
-                .count()
-            )
-            last_upload = (
-                session.query(func.max(Media.created_at))
-                .filter(Media.model_id == model.id)
-                .scalar()
-            )
+@router.get("/{model_id}", response_model=ModelResponse)
+def get_model_endpoint(model_id: int, db: Session = Depends(get_db)):
+    model = model_service.get_model_by_id_with_session(db, model_id)
+    if not model:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
+    return model
 
-            slug = normalize_model_name(model.name)
+@router.put("/{model_id}", response_model=ModelResponse)
+def update_model_endpoint(model_id: int, model_update: ModelUpdate, db: Session = Depends(get_db)):
+    updated_model = model_service.update_model(db, model_id, model_update)
+    if not updated_model:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
+    return updated_model
 
-            # find preview image/video (safe, filesystem only)
-            preview_file = None
-            preview_type = None
-            model_dir = MEDIA_ROOT / slug
-            if model_dir.exists() and model_dir.is_dir():
-                images = sorted(
-                    f.name
-                    for f in model_dir.iterdir()
-                    if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
-                )
-                if images:
-                    preview_file = images[0]
-                    preview_type = "image"
-                else:
-                    videos = sorted(
-                        f.name
-                        for f in model_dir.iterdir()
-                        if f.suffix.lower() in (".mp4", ".mov", ".webm")
-                    )
-                    if videos:
-                        preview_file = videos[0]
-                        preview_type = "video"
+@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_model_endpoint(model_id: int, db: Session = Depends(get_db)):
+    model_to_delete = model_service.get_model_by_id_with_session(db, model_id)
+    if not model_to_delete:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
+    
+    model_name = model_to_delete.name
 
-            models_data.append(
-                {
-                    "name": model.name,
-                    "slug": slug,
-                    "media_count": count,
-                    "image_count": image_count,
-                    "video_count": video_count,
-                    "last_upload": last_upload,
-                    "preview_file": preview_file,
-                    "preview_type": preview_type,
-                }
-            )
-    finally:
-        session.close()
+    deleted, media_records = model_service.delete_model_by_id(db, model_id)
 
-    return templates.TemplateResponse(
-        "models.html",
-        {
-            "request": request,
-            "models": models_data,
-            "token": token,
-            "token_query": token_query,
-        },
-    )
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete model")
 
-
-@router.delete("/{slug}")
-def delete_model(slug: str):
-    session = SessionLocal()
-    try:
-        # match model name from slug
-        model_name = slug.replace("_", " ")
-        normalized_name = " ".join(model_name.lower().replace("_", " ").split())
-
-        model = (
-            session.query(Model)
-            .filter(Model.normalized_name == normalized_name)
-            .first()
-        )
-
-        if not model:
-            raise HTTPException(status_code=404, detail="Model not found")
-
-        # delete related media rows and files
-        media_items = (
-            session.query(Media)
-            .filter(Media.model_id == model.id)
-            .all()
-        )
-        for media in media_items:
-            _delete_media_file(media.file_path)
-            session.delete(media)
-
-        # delete model row
-        session.delete(model)
-        session.commit()
-
-        return {"status": "deleted"}
-    finally:
-        session.close()
+    storage_service.delete_media_files(media_records)
+    storage_service.delete_model_directory(model_name)
+    
+    return {"message": "Model and associated media deleted successfully"}

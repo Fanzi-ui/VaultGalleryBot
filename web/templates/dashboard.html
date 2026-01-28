@@ -2,23 +2,29 @@
 
 {% block head %}
   <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="/static/vendor/splide/splide.min.css">
 {% endblock %}
 
 {% block content %}
 
-<!-- BACKGROUND -->
-<div id="slideshow">
-  <div id="bg-single">
-    <img class="bg-item" id="bg-image-1" alt="Background media" />
-    <img class="bg-item" id="bg-image-2" alt="" />
-    <img class="bg-item" id="bg-image-3" alt="" />
-  </div>
-</div>
-
-<div class="hero">
-  <div>
-    <img src="/static/logo/logo.png" alt="VaultGalleryBot logo">
-    <p>Welcome back</p>
+<div class="card-slideshow-container">
+  <div id="slideshow" class="splide" aria-label="Featured Models Slideshow">
+    {% if slideshow_images %}
+      <div class="splide__track">
+        <ul class="splide__list">
+          {% for image in slideshow_images %}
+          <li class="splide__slide">
+            <img src="{{ image.url }}" alt="{{ image.model_name }}" loading="lazy">
+            <div class="splide__caption">{{ image.model_name }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% else %}
+      <div class="slideshow-empty">
+        No images yet. Upload media to start the slideshow.
+      </div>
+    {% endif %}
   </div>
 </div>
 
@@ -30,7 +36,7 @@
   <span>|</span>
   <span>Media: {{ media_count }}</span>
   <span>|</span>
-  <a href="/models{{ token_query }}">View Models →</a>
+  <a href="/models">View Models →</a>
 </div>
 
 <!-- CONTROLS -->
@@ -68,6 +74,7 @@
   "images": slideshow_images | default([])
 } | tojson }}
 </script>
-<script src="/static/js/dashboard.js"></script>
+<script src="/static/vendor/splide/splide.min.js"></script>
+<script src="/static/js/dashboard.js?v=1.8"></script>
 
 {% endblock %}

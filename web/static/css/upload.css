@@ -1,0 +1,190 @@
+body {
+    background: #050505;
+}
+
+.upload-header {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.upload-header h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.upload-header p {
+    margin: 0.5rem 0 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.upload-form {
+    padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    background-color: #0c0c0c;
+    margin-bottom: 2rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.upload-form label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.upload-form input[type="number"],
+.upload-form input[type="text"],
+.upload-form select,
+.upload-form input[type="file"] {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    background-color: #101010;
+    color: #ffffff;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.upload-form button[type="submit"] {
+    justify-self: start;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.upload-progress-container {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.upload-progress-container progress {
+    width: 100%;
+    height: 12px;
+    margin-bottom: 0.5rem;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 999px;
+    background-color: #111;
+}
+
+.upload-progress-container progress::-webkit-progress-bar {
+    background-color: #111;
+    border-radius: 999px;
+}
+
+.upload-progress-container progress::-webkit-progress-value {
+    background-color: #00bcd4;
+    border-radius: 999px;
+}
+
+.upload-progress-container progress::-moz-progress-bar {
+    background-color: #00bcd4;
+    border-radius: 999px;
+}
+
+.upload-progress-container #progress-text {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.upload-results {
+    margin-top: 2rem;
+}
+
+.upload-results article {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #0c0c0c;
+}
+
+.upload-results article header {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    color: #00bcd4;
+}
+
+.upload-results .message {
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.upload-results .message.error {
+    background-color: rgba(255,0,0,0.12);
+    color: #ff7b7b;
+    border: 1px solid rgba(255,0,0,0.35);
+}
+
+.upload-results .message.success {
+    background-color: rgba(0,188,212,0.12);
+    color: #86eaff;
+    border: 1px solid rgba(0,188,212,0.35);
+}
+
+.model-picker {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 1rem;
+    background-color: #0c0c0c;
+}
+
+.model-picker legend {
+    padding: 0 0.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.model-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .upload-form {
+        padding: 1.5rem;
+    }
+
+    .upload-form input[type="number"],
+    .upload-form input[type="text"],
+    .upload-form select,
+    .upload-form input[type="file"],
+    .upload-form button[type="submit"] {
+        font-size: 0.65rem;
+        padding: 0.7rem 0.6rem;
+    }
+}

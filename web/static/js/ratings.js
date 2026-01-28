@@ -1,6 +1,5 @@
 const ratingsDataEl = document.getElementById("ratings-data");
 const ratingsData = ratingsDataEl ? JSON.parse(ratingsDataEl.textContent) : {};
-const adminToken = ratingsData.adminToken || "";
 const countEl = document.getElementById("ratings-count");
 
 function updateCount(delta) {
@@ -15,7 +14,30 @@ document.querySelectorAll(".rating-card").forEach((card) => {
   const skipBtn = card.querySelector(".skip-rating");
   const textarea = card.querySelector("textarea");
   const status = card.querySelector(".rating-status");
+  const countEl = card.querySelector(".caption-count");
   const mediaId = card.dataset.id;
+
+  function updateCount() {
+    if (!textarea || !countEl) return;
+    const max = Number(textarea.getAttribute("maxlength") || "0");
+    const current = textarea.value.length;
+    countEl.textContent = `${current}/${max}`;
+  }
+
+  if (textarea) {
+    textarea.addEventListener("input", updateCount);
+    textarea.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        skipBtn?.click();
+      }
+      if (event.key === "Enter" && event.ctrlKey) {
+        event.preventDefault();
+        saveBtn?.click();
+      }
+    });
+  }
+
+  updateCount();
 
   if (skipBtn) {
     skipBtn.addEventListener("click", () => {
@@ -34,7 +56,6 @@ document.querySelectorAll(".rating-card").forEach((card) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(adminToken ? { "X-Admin-Token": adminToken } : {}),
         },
         body: JSON.stringify({ caption }),
       }).then((res) => {

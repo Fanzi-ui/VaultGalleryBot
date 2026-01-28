@@ -11,7 +11,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     >
-    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="/static/css/admin.css?v=1.5">
     {% block head %}
     {% endblock %}
 </head>
@@ -21,23 +21,32 @@
     <nav class="container">
         <ul>
             <li class="nav-brand">
-                <img src="/static/logo/logo.png" alt="VaultGalleryBot logo">
-                <strong>VaultGalleryBot Admin</strong>
+                <a href="/" aria-label="VaultGalleryBot Dashboard">
+                    <img src="/static/logo/logo.png" alt="VaultGalleryBot logo">
+                    <strong>VaultGalleryBot Admin</strong>
+                </a>
             </li>
         </ul>
-        <ul>
-            <li class="nav-meta">Fanzi.ui</li>
-            <li><a href="/{{ token_query | default('') }}">Dashboard</a></li>
-            <li><a href="/recent{{ token_query | default('') }}">Recent</a></li>
-            <li><a href="/top{{ token_query | default('') }}">Top Picks</a></li>
-            <li><a href="/ratings{{ token_query | default('') }}">Ratings</a></li>
-            <li><a href="/insights{{ token_query | default('') }}">Insights</a></li>
-            <li><a href="/collections{{ token_query | default('') }}">Collections</a></li>
-            <li><a href="/models{{ token_query | default('') }}">Models</a></li>
-            <li><a href="/slideshow{{ token_query | default('') }}">Slideshow</a></li>
-            <li><a href="/logout">Logout</a></li>
-        </ul>
+        <div class="nav-links">
+            <ul>
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/upload">Upload</a></li>
+                <li><a href="/recent">Recent</a></li>
+                <li><a href="/top">Top Picks</a></li>
+                <li><a href="/ratings">Ratings</a></li>
+                <li><a href="/insights">Insights</a></li>
+                <li><a href="/collections">Collections</a></li>
+                <li><a href="/models">Models</a></li>
+                <li><a href="/slideshow">Slideshow</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </div>
+        <button class="nav-toggle" aria-label="Toggle navigation">
+            <span class="nav-toggle-icon"></span>
+        </button>
     </nav>
+{% else %}
+    <!-- Optional: A minimal nav for non-logged-in pages if needed -->
 {% endif %}
 
 <main class="container">
@@ -49,7 +58,8 @@
   <div>Fanzi.ui • <span id="year">2025</span></div>
 </footer>
 
-<script src="/static/js/admin.js"></script>
+<script src="/static/js/admin.js?v=1.5"></script>
+{% block scripts %}
+{% endblock %}
 
 </body>
-</html>

@@ -1,11 +1,11 @@
 const slideshowDataEl = document.getElementById("slideshow-data");
 const slideshowData = slideshowDataEl ? JSON.parse(slideshowDataEl.textContent) : {};
 const mediaItems = slideshowData.media || [];
-const tokenQuery = slideshowData.tokenQuery || "";
 
 const slideshowEl = document.querySelector(".slideshow");
 const stageEl = document.getElementById("slideshow-stage");
 const hudMeta = document.getElementById("hud-meta");
+const hudCounter = document.getElementById("hud-counter");
 const hudToggle = document.getElementById("hud-toggle");
 const hudBack = document.getElementById("hud-back");
 
@@ -105,6 +105,7 @@ function buildQueue() {
   const list = filteredMedia();
   if (!list.length) {
     queue = [];
+    setHudCounter(null);
     return;
   }
 
@@ -129,6 +130,19 @@ function setHudText(item) {
   const ratingLabel = item.rating ? `Rating ${item.rating}` : "Unrated";
   const typeLabel = item.media_type === "video" ? "Video" : "Image";
   hudMeta.textContent = `${item.model_name || "Unknown"} • ${typeLabel} • ${ratingLabel}`;
+}
+
+function setHudCounter(item) {
+  if (!hudCounter) return;
+  const list = filteredMedia();
+  const total = list.length;
+  if (!item || total === 0) {
+    hudCounter.textContent = "0 / 0";
+    return;
+  }
+  const index = list.findIndex((entry) => entry.id === item.id);
+  const position = index >= 0 ? index + 1 : 0;
+  hudCounter.textContent = `${position} / ${total}`;
 }
 
 function setLayerContent(layer, item) {
@@ -161,6 +175,7 @@ function setLayerContent(layer, item) {
   }
 
   setHudText(item);
+  setHudCounter(item);
 }
 
 function swapLayers() {
@@ -308,7 +323,7 @@ if (hudToggle) {
 
 if (hudBack) {
   hudBack.addEventListener("click", () => {
-    window.location.href = `/${tokenQuery}`;
+    window.location.href = "/";
   });
 }
 

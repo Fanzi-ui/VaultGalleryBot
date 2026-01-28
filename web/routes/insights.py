@@ -6,7 +6,7 @@ from sqlalchemy import func, desc
 from models.database import SessionLocal
 from models.media_entity import Media
 from models.model_entity import Model
-from web.auth import get_request_token, is_admin_request
+from web.auth import is_admin_request
 
 router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
@@ -43,6 +43,11 @@ def build_media_rows(rows):
                 "rating": media.rating,
                 "rating_caption": media.rating_caption,
                 "media_type": media.media_type,
+                "created_at": (
+                    media.created_at.isoformat()
+                    if media.created_at
+                    else None
+                ),
             }
         )
     return items
@@ -54,9 +59,6 @@ def ratings_review(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-
     try:
         rows = (
             session.query(Media, Model)
@@ -76,8 +78,6 @@ def ratings_review(request: Request):
         {
             "request": request,
             "items": items,
-            "token": token,
-            "token_query": token_query,
         },
     )
 
@@ -88,8 +88,6 @@ def top_picks(request: Request, page: int = 1):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
     per_page = 48
     page = max(1, page)
 
@@ -114,7 +112,6 @@ def top_picks(request: Request, page: int = 1):
 
     has_prev = page > 1
     has_next = page * per_page < total
-    page_token_query = f"&token={token}" if token else ""
 
     return templates.TemplateResponse(
         "top.html",
@@ -124,9 +121,6 @@ def top_picks(request: Request, page: int = 1):
             "page": page,
             "has_prev": has_prev,
             "has_next": has_next,
-            "page_token_query": page_token_query,
-            "token": token,
-            "token_query": token_query,
         },
     )
 
@@ -137,8 +131,6 @@ def recent_media(request: Request, page: int = 1):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
     per_page = 48
     page = max(1, page)
 
@@ -161,7 +153,6 @@ def recent_media(request: Request, page: int = 1):
 
     has_prev = page > 1
     has_next = page * per_page < total
-    page_token_query = f"&token={token}" if token else ""
 
     return templates.TemplateResponse(
         "recent.html",
@@ -171,9 +162,6 @@ def recent_media(request: Request, page: int = 1):
             "page": page,
             "has_prev": has_prev,
             "has_next": has_next,
-            "page_token_query": page_token_query,
-            "token": token,
-            "token_query": token_query,
         },
     )
 
@@ -184,9 +172,6 @@ def model_insights(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-
     try:
         models = session.query(Model).order_by(Model.name).all()
         insights = []
@@ -277,7 +262,6 @@ def model_insights(request: Request):
         {
             "request": request,
             "insights": insights,
-            "token_query": token_query,
         },
     )
 
@@ -288,9 +272,6 @@ def collections(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     session = SessionLocal()
-    token = get_request_token(request)
-    token_query = f"?token={token}" if token else ""
-
     try:
         models = [model.name for model in session.query(Model).order_by(Model.name).all()]
     finally:
@@ -301,7 +282,5 @@ def collections(request: Request):
         {
             "request": request,
             "models": models,
-            "token": token,
-            "token_query": token_query,
         },
     )

@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 import sys
 
 try:
@@ -12,7 +11,6 @@ except Exception:  # noqa: BLE001
 
 ENV_FILE = Path(".env")
 EXAMPLE_FILE = Path(".env.example")
-BOT_TOKEN_RE = re.compile(r"^\d+:[A-Za-z0-9_-]{20,}$")
 
 
 def load_env_file(path: Path) -> dict:
@@ -26,34 +24,6 @@ def load_env_file(path: Path) -> dict:
         key, value = line.split("=", 1)
         values[key.strip()] = value.strip()
     return values
-
-
-def normalize_authorized_users(value: str) -> tuple[bool, str, str]:
-    if not value.strip():
-        return False, "AUTHORIZED_USERS is required.", ""
-    parts = []
-    for item in value.replace(",", " ").split():
-        item = item.strip()
-        if not item:
-            continue
-        if not item.isdigit():
-            return (
-                False,
-                "AUTHORIZED_USERS must be numeric IDs separated by commas or spaces.",
-                "",
-            )
-        parts.append(item)
-    if not parts:
-        return False, "AUTHORIZED_USERS is required.", ""
-    return True, "", ",".join(parts)
-
-
-def validate_bot_token(token: str) -> tuple[bool, str]:
-    if not token.strip():
-        return False, "BOT_TOKEN is required."
-    if not BOT_TOKEN_RE.match(token.strip()):
-        return False, "BOT_TOKEN format looks invalid."
-    return True, ""
 
 
 def prompt_value(key: str, default_value: str = "", secret: bool = False) -> str:
@@ -81,24 +51,7 @@ def ensure_env_cli() -> int:
     print("VaultGalleryBot installer (CLI fallback)")
     print("----------------------------------------")
     print("Leave a prompt empty to use the default value.")
-    print("Use your own BotFather bot token; keep it private.")
-    print("AUTHORIZED_USERS expects numeric Telegram IDs.")
     print("Web admin credentials use defaults from the README.")
-
-    bot_token = ""
-    while True:
-        bot_token = prompt_value("BOT_TOKEN", "", True)
-        ok, error = validate_bot_token(bot_token)
-        if ok:
-            break
-        print(error)
-
-    default_users = ""
-    authorized_users = prompt_value("AUTHORIZED_USERS", default_users)
-    ok, error, authorized_users = normalize_authorized_users(authorized_users)
-    if not ok:
-        print(error)
-        return 1
 
     web_admin_token = coalesce_value(
         current, defaults, "WEB_ADMIN_TOKEN", "some_random_secret"
@@ -106,11 +59,13 @@ def ensure_env_cli() -> int:
     web_admin_user = coalesce_value(current, defaults, "WEB_ADMIN_USER", "admin")
     web_admin_pass = coalesce_value(current, defaults, "WEB_ADMIN_PASS", "pass123")
 
+    web_admin_token = prompt_value("WEB_ADMIN_TOKEN", web_admin_token)
+    web_admin_user = prompt_value("WEB_ADMIN_USER", web_admin_user)
+    web_admin_pass = prompt_value("WEB_ADMIN_PASS", web_admin_pass, True)
+
     content = "\n".join(
         [
-            f"BOT_TOKEN={bot_token}",
-            f"AUTHORIZED_USERS={authorized_users}",
-            f"WEB_ADMIN_TOKEN={web_admin_token}",
+            f"WEB_ADMIN_TOKEN={web_admin_token or 'some_random_secret'}",
             f"WEB_ADMIN_USER={web_admin_user or 'admin'}",
             f"WEB_ADMIN_PASS={web_admin_pass or 'pass123'}",
             "",
@@ -130,10 +85,7 @@ def ensure_env_gui() -> int:
     root.resizable(False, False)
     tk.Label(
         root,
-        text=(
-            "Use your own BotFather bot token. "
-            "AUTHORIZED_USERS should be numeric Telegram IDs."
-        ),
+        text="Configure web admin credentials for the API and dashboard.",
         wraplength=420,
         justify="left",
     ).grid(row=0, column=0, columnspan=2, sticky="w", padx=8, pady=6)
@@ -148,40 +100,25 @@ def ensure_env_gui() -> int:
         entry.grid(row=row, column=1, sticky="ew", padx=8, pady=6)
         fields[key] = var
 
-    add_field(1, "BOT_TOKEN", "BOT_TOKEN", "", True)
-    add_field(
-        2,
-        "AUTHORIZED_USERS",
-        "AUTHORIZED_USERS",
-        "",
-        False,
-    )
     web_admin_token = coalesce_value(
         current, defaults, "WEB_ADMIN_TOKEN", "some_random_secret"
     )
     web_admin_user = coalesce_value(current, defaults, "WEB_ADMIN_USER", "admin")
     web_admin_pass = coalesce_value(current, defaults, "WEB_ADMIN_PASS", "pass123")
+    add_field(1, "WEB_ADMIN_TOKEN", "WEB_ADMIN_TOKEN", web_admin_token, True)
+    add_field(2, "WEB_ADMIN_USER", "WEB_ADMIN_USER", web_admin_user, False)
+    add_field(3, "WEB_ADMIN_PASS", "WEB_ADMIN_PASS", web_admin_pass, True)
 
     def on_save() -> None:
-        bot_token = fields["BOT_TOKEN"].get().strip()
-        authorized_users = fields["AUTHORIZED_USERS"].get().strip()
-        ok, error = validate_bot_token(bot_token)
-        if not ok:
-            messagebox.showerror("Invalid BOT_TOKEN", error)
-            return
-
-        ok, error, authorized_users = normalize_authorized_users(authorized_users)
-        if not ok:
-            messagebox.showerror("Invalid AUTHORIZED_USERS", error)
-            return
+        web_admin_token_value = fields["WEB_ADMIN_TOKEN"].get().strip()
+        web_admin_user_value = fields["WEB_ADMIN_USER"].get().strip()
+        web_admin_pass_value = fields["WEB_ADMIN_PASS"].get().strip()
 
         content = "\n".join(
             [
-                f"BOT_TOKEN={bot_token}",
-                f"AUTHORIZED_USERS={authorized_users}",
-                f"WEB_ADMIN_TOKEN={web_admin_token}",
-                f"WEB_ADMIN_USER={web_admin_user}",
-                f"WEB_ADMIN_PASS={web_admin_pass}",
+                f"WEB_ADMIN_TOKEN={web_admin_token_value or web_admin_token}",
+                f"WEB_ADMIN_USER={web_admin_user_value or web_admin_user}",
+                f"WEB_ADMIN_PASS={web_admin_pass_value or web_admin_pass}",
                 "",
             ]
         )
@@ -195,7 +132,7 @@ def ensure_env_gui() -> int:
         root.destroy()
 
     button_frame = tk.Frame(root)
-    button_frame.grid(row=6, column=0, columnspan=2, pady=10)
+    button_frame.grid(row=5, column=0, columnspan=2, pady=10)
 
     tk.Button(button_frame, text="Save", command=on_save, width=12).pack(
         side="left", padx=6

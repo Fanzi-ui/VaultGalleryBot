@@ -3,6 +3,7 @@ import os
 from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 
 from web.auth import (
     SERVER_SESSION_TOKEN,
@@ -17,11 +18,46 @@ router = APIRouter()
 templates = Jinja2Templates(directory="web/templates")
 
 
+class ApiLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class ApiLoginResponse(BaseModel):
+    token: str
+
+
+@router.post("/api/login", response_model=ApiLoginResponse)
+def api_login(request: Request, payload: ApiLoginRequest):
+    client_ip = request.client.host if request.client else "unknown"
+    blocked, retry_after = is_login_blocked(client_ip)
+    if blocked:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many attempts. Try again in {retry_after}s.",
+        )
+    if not verify_admin_credentials(payload.username, payload.password):
+        record_failed_login(client_ip)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
+    reset_login_attempts(client_ip)
+
+    admin_token = os.getenv("WEB_ADMIN_TOKEN")
+    if not admin_token:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server misconfigured: WEB_ADMIN_TOKEN is not set",
+        )
+
+    return {"token": admin_token}
+
+
 @router.get("/login")
 def login_form(request: Request, error: str | None = None):
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "error": error},
+        {"request": request, "error": error, "hide_nav": True},
     )
 
 
@@ -39,6 +75,7 @@ def login_submit(
             {
                 "request": request,
                 "error": f"Too many attempts. Try again in {retry_after}s.",
+                "hide_nav": True,
             },
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         )
@@ -46,7 +83,7 @@ def login_submit(
         record_failed_login(client_ip)
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": "Invalid username or password"},
+            {"request": request, "error": "Invalid username or password", "hide_nav": True},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     reset_login_attempts(client_ip)

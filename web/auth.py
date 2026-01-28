@@ -3,12 +3,13 @@ import secrets
 import time
 from pathlib import Path
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, status, Request, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
+
 SERVER_SESSION_TOKEN = secrets.token_urlsafe(32)
 FAILED_LOGINS: dict[str, list[float]] = {}
 LOCKED_UNTIL: dict[str, float] = {}
@@ -16,14 +17,7 @@ MAX_LOGIN_ATTEMPTS = 5
 WINDOW_SECONDS = 10 * 60
 LOCKOUT_SECONDS = 15 * 60
 
-
-def require_admin_token(request: Request) -> None:
-    if not is_admin_request(request):
-        raise HTTPException(
-            status_code=status.HTTP_303_SEE_OTHER,
-            headers={"Location": "/login"},
-            detail="Unauthorized",
-        )
+api_key_scheme = HTTPBearer(auto_error=False)
 
 
 def get_request_token(request: Request) -> str:
@@ -42,15 +36,23 @@ def get_request_session_token(request: Request) -> str:
 def is_admin_request(request: Request) -> bool:
     admin_token = os.getenv("WEB_ADMIN_TOKEN")
     if not admin_token:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Server misconfigured: WEB_ADMIN_TOKEN is not set",
-        )
+        # If token is not set, we can't secure anything with it, so we prevent access.
+        # This should ideally be caught at startup or via config validation.
+        return False
 
     return (
         get_request_token(request) == admin_token
         and get_request_session_token(request) == SERVER_SESSION_TOKEN
     )
+
+
+def require_admin_token(request: Request) -> None:
+    if not is_admin_request(request):
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            headers={"Location": "/login"},
+            detail="Unauthorized",
+        )
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -87,3 +89,24 @@ def reset_login_attempts(ip: str) -> None:
 
 def secure_cookies_enabled() -> bool:
     return os.getenv("WEB_SECURE_COOKIES", "false").lower() in {"1", "true", "yes"}
+
+
+def require_api_key(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Security(api_key_scheme),
+) -> str:
+    if is_admin_request(request):
+        return "session"
+    admin_token = os.getenv("WEB_ADMIN_TOKEN")
+    if not admin_token:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server misconfigured: WEB_ADMIN_TOKEN is not set in .env",
+        )
+    if credentials and credentials.credentials == admin_token:
+        return credentials.credentials
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid API Key",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
