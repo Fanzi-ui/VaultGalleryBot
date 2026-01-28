@@ -3,7 +3,6 @@ import os
 from models.model_entity import Model
 from models.media_entity import Media
 from services.avn_service import compute_avn_scores
-from services.ml_rating_service import compute_ml_score
 
 
 def _compute_scores(models: list[Model], session) -> dict[str, int]:
@@ -14,6 +13,14 @@ def _compute_scores(models: list[Model], session) -> dict[str, int]:
         return compute_avn_scores(names)
     
     if source == "ml":
+        try:
+            from services.ml_rating_service import compute_ml_score
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "ML scoring requires torch. Install torch or set CARD_SCORE_SOURCE=avn "
+                "or SCORE_ON_START=false to skip ML scoring on startup."
+            ) from exc
+
         ml_scores = {}
         for model in models:
             media_item = session.query(Media).filter_by(model_id=model.id).filter_by(media_type="image").first()
