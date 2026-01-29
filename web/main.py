@@ -24,6 +24,18 @@ from web.routes.media import media_path_to_url
 
 app = FastAPI(title="VaultGalleryBot API")
 
+def _env_flag(name: str) -> str:
+    return "set" if os.getenv(name) else "missing"
+
+print(
+    "Startup env check:",
+    f"WEB_ADMIN_TOKEN={_env_flag('WEB_ADMIN_TOKEN')}",
+    f"WEB_ADMIN_USER={_env_flag('WEB_ADMIN_USER')}",
+    f"WEB_ADMIN_PASS={_env_flag('WEB_ADMIN_PASS')}",
+    f"WEB_SECURE_COOKIES={_env_flag('WEB_SECURE_COOKIES')}",
+    f"DATABASE_URL={_env_flag('DATABASE_URL')}",
+)
+
 ensure_media_rating_columns()
 ensure_model_normalized_columns()
 ensure_model_card_columns()
