@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SERVER_SESSION_TOKEN = secrets.token_urlsafe(32)
+SERVER_SESSION_TOKEN = (
+    os.getenv("WEB_SESSION_TOKEN")
+    or os.getenv("WEB_ADMIN_TOKEN")
+    or secrets.token_urlsafe(32)
+)
 FAILED_LOGINS: dict[str, list[float]] = {}
 LOCKED_UNTIL: dict[str, float] = {}
 MAX_LOGIN_ATTEMPTS = 5
