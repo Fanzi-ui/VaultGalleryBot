@@ -10,6 +10,7 @@ from models.database import (
     ensure_media_rating_columns,
     ensure_model_card_columns,
     ensure_model_normalized_columns,
+    init_db,
     SessionLocal,
 )
 from models.media_entity import Media
@@ -36,6 +37,14 @@ print(
     f"DATABASE_URL={_env_flag('DATABASE_URL')}",
 )
 
+_required_env = ["WEB_ADMIN_TOKEN", "WEB_ADMIN_USER", "WEB_ADMIN_PASS"]
+_missing_env = [name for name in _required_env if not os.getenv(name)]
+if _missing_env:
+    raise RuntimeError(
+        "Missing required environment variables: " + ", ".join(_missing_env)
+    )
+
+init_db()
 ensure_media_rating_columns()
 ensure_model_normalized_columns()
 ensure_model_card_columns()
