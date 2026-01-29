@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadModels = async () => {
         try {
-            const response = await fetch('/api/models', {
+            const response = await fetch('/api/models/', {
                 credentials: "same-origin",
             });
             if (!response.ok) {
