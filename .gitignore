@@ -8,3 +8,8 @@ media/
 logs/
 .env.local
 .env.bak
+
+# backups
+*.bak
+*.db.bak
+*.sqlite
